@@ -1,0 +1,54 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+  height: 100%;
+}
+
+.hero {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.layers {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+  user-select: none;
+}
+
+.layer-gr {
+  mix-blend-mode: screen;
+}
+
+.ui {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 6vw 10vh;
+  z-index: 10;
+}
+
+.logo {
+  width: 50%;
+  max-width: 240px;
+  height: auto;
+  image-rendering: pixelated;
+  opacity: 0;
+}
