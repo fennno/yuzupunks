@@ -96,13 +96,8 @@ export default function Home() {
       tl.to('.logo, .buttons', { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' }, 3.5)
     }, containerRef)
 
-    // ── Warble seed animation — all devices ───────────────────────────────────
-    if (treeNoiseRef.current)
-      gsap.to(treeNoiseRef.current,   { attr: { seed: 4 }, duration: 2.66, repeat: -1, ease: 'steps(4)', yoyo: true })
-    if (subtleNoiseRef.current)
-      gsap.to(subtleNoiseRef.current, { attr: { seed: 4 }, duration: 2,    repeat: -1, ease: 'steps(4)', yoyo: true })
-    if (grNoiseRef.current)
-      gsap.to(grNoiseRef.current,     { attr: { seed: 6 }, duration: 1.6,  repeat: -1, ease: 'steps(4)', yoyo: true })
+    // Warble seed animation dropped for now — static SVG displacement stays (one-time GPU cost).
+    // Will revisit with baked image-sequence approach for mobile performance.
 
     // god ray flicker
     gsap.to('.layer-gr', { opacity: 0.3, duration: 1.2, repeat: -1, ease: 'steps(8)', yoyo: true, delay: 7 })
@@ -182,36 +177,28 @@ export default function Home() {
     }
   }, [phase])
 
-  // ── Explore: GSAP zoom transition (no video) ──────────────────────────────
+  // ── Explore: GSAP zoom — single curve, lower anchor ─────────────────────
   const enterInterior = () => {
     if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
 
     gsap.to('.ui', { opacity: 0, duration: 0.25, ease: 'power2.in' })
 
-    const tl = gsap.timeline({ onComplete: () => setPhase('interior') })
-
-    // First 0.9s — slow build-up
-    tl.to('.layers', {
-      scale: 1.18,
-      transformOrigin: '50% 78%',
-      duration: 0.9,
-      ease: 'power2.in',
-    })
-
-    // Second 0.9s — burst toward lower third with the custom curve
-    tl.to('.layers', {
+    // Full 1.8s on the exact cubic-bezier, no power2 preamble
+    gsap.to('.layers', {
       scale: 1.55,
-      transformOrigin: '50% 78%',
-      duration: 0.9,
+      transformOrigin: '50% 92%',   // anchor near bottom of frame
+      duration: 1.8,
       ease: 'zoomBurst',
+      onComplete: () => setPhase('interior'),
     })
 
-    // White flash rides in on the second half
-    tl.to(pageFlashRef.current, {
+    // White flash enters on the back half
+    gsap.to(pageFlashRef.current, {
       opacity: 1,
       duration: 0.9,
       ease: 'power2.in',
-    }, 0.9)
+      delay: 0.9,
+    })
   }
 
   // ── Mute toggle ───────────────────────────────────────────────────────────

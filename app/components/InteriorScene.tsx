@@ -102,10 +102,11 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
   }
 
   const handleExit = () => {
-    if (!sceneRef.current) return
-    gsap.to(sceneRef.current, {
-      opacity: 0,
-      duration: 0.5,
+    if (!flashRef.current) return
+    // Flash to white then call onExit — hero will mount with its own white overlay and bezier it out
+    gsap.to(flashRef.current, {
+      opacity: 1,
+      duration: 0.4,
       ease: 'power2.in',
       onComplete: onExit,
     })
