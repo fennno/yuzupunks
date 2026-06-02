@@ -24,6 +24,8 @@ export default function Home() {
 
   const containerRef      = useRef<HTMLDivElement>(null)
   const videoRef          = useRef<HTMLVideoElement>(null)
+  const flashRef          = useRef<HTMLDivElement>(null)
+  const flashStartedRef   = useRef(false)
   const treeNoiseRef      = useRef<SVGFETurbulenceElement>(null)
   const subtleNoiseRef    = useRef<SVGFETurbulenceElement>(null)
   const grNoiseRef        = useRef<SVGFETurbulenceElement>(null)
@@ -57,9 +59,10 @@ export default function Home() {
 
       const tl = gsap.timeline()
 
-      tl.to('.layers',     { scale: 1.08, yPercent: -12, duration: 3,   ease: 'snap' }, 0)
-      tl.to('.layer-far',  { yPercent: 0,                duration: 3,   ease: 'snap' }, 0)
-      tl.to('.layer-tree', { scale: 1.0, yPercent: 0,    duration: 2.5, ease: 'snap' }, 0)
+      // all layers reach canonical rest within 5s — clean base for transition
+      tl.to('.layers',     { scale: 1.0, yPercent: -28, duration: 5,   ease: 'snap' }, 0)
+      tl.to('.layer-far',  { yPercent: 0,               duration: 5,   ease: 'snap' }, 0)
+      tl.to('.layer-tree', { scale: 1.0, yPercent: 0,   duration: 4,   ease: 'snap' }, 0)
       tl.to('.layer-mid',  { yPercent: 0,                duration: 0.3, ease: 'snap' }, 0)
 
       tl.fromTo('.layer-gr',
@@ -68,10 +71,7 @@ export default function Home() {
         1
       )
 
-      tl.to('.logo, .buttons', { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' }, 2.5)
-
-      // ambient: gentle zoom back to neutral — stops at 1.0 so no black edges bleed in
-      tl.to('.layers', { scale: 1.0, duration: 20, ease: 'snap' }, 3)
+      tl.to('.logo, .buttons', { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' }, 3.5)
 
     }, containerRef)
 
@@ -137,6 +137,18 @@ export default function Home() {
     videoRef.current.play().catch(() => setPhase('interior'))
   }, [phase])
 
+  // ── Transition video flash handler ──────────────────────────────────────────
+  const handleTimeUpdate = () => {
+    const vid = videoRef.current
+    const flash = flashRef.current
+    if (!vid || !flash || flashStartedRef.current) return
+    const timeLeft = vid.duration - vid.currentTime
+    if (timeLeft <= 2) {
+      flashStartedRef.current = true
+      gsap.to(flash, { opacity: 1, duration: 2, ease: 'steps(24)' })
+    }
+  }
+
   // ── Explore handler ─────────────────────────────────────────────────────────
   const enterInterior = () => {
     if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
@@ -163,18 +175,30 @@ export default function Home() {
     <main ref={containerRef} className="hero">
 
       {phase === 'transition' && (
-        <video
-          ref={videoRef}
-          src="/transition.mp4"
-          muted
-          playsInline
-          className="transition-video"
-          onEnded={() => setPhase('interior')}
-        />
+        <>
+          <video
+            ref={videoRef}
+            src="/transition.mp4"
+            muted
+            playsInline
+            className="transition-video"
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => setPhase('interior')}
+          />
+          <div ref={flashRef} className="flash-overlay" style={{ opacity: 0 }} />
+        </>
       )}
 
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
+          {/* Dither — 4-level posterization, desktop only (applied via CSS) */}
+          <filter id="dither" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+            <feComponentTransfer>
+              <feFuncR type="discrete" tableValues="0 0.33 0.66 1"/>
+              <feFuncG type="discrete" tableValues="0 0.33 0.66 1"/>
+              <feFuncB type="discrete" tableValues="0 0.33 0.66 1"/>
+            </feComponentTransfer>
+          </filter>
           <filter id="warble-tree" x="-5%" y="-5%" width="110%" height="110%">
             <feTurbulence ref={treeNoiseRef} type="turbulence" baseFrequency="0.007" numOctaves="1" seed="1" result="noise"/>
             <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>

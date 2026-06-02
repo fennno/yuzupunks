@@ -82,16 +82,21 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
   const [entering, setEntering] = useState(true)
   const sceneRef  = useRef<HTMLDivElement>(null)
   const imageRef  = useRef<HTMLImageElement>(null)
+  const flashRef  = useRef<HTMLDivElement>(null)
 
   const node = NODES[nodeId]
 
-  // fade in on mount
+  // fade in on mount + flash fade-out
   useEffect(() => {
     if (!sceneRef.current) return
     gsap.fromTo(sceneRef.current,
       { opacity: 0 },
       { opacity: 1, duration: 0.6, ease: 'power2.out', onComplete: () => setEntering(false) }
     )
+    // white flash fades out over first 2s (24 frames @ 12fps)
+    if (flashRef.current) {
+      gsap.to(flashRef.current, { opacity: 0, duration: 2, ease: 'steps(24)' })
+    }
   }, [])
 
   const navigate = (targetId: NodeId) => {
@@ -119,6 +124,9 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
 
   return (
     <div ref={sceneRef} className="interior" style={{ opacity: 0 }}>
+
+      {/* white flash overlay — fades out from white on enter */}
+      <div ref={flashRef} className="flash-overlay" />
 
       {/* scene image */}
       <img
