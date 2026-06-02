@@ -32,6 +32,7 @@ html, body {
 
 .layer-gr {
   mix-blend-mode: screen;
+  filter: url(#warble-gr);
 }
 
 .layer-tree {
