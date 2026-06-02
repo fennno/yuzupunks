@@ -43,21 +43,9 @@ html, body {
   top: 15px;
 }
 
-/* warble filters — applied on all devices
-   Desktop: seed animates (GSAP steps) = choppy warp movement
-   Mobile:  seed is static = turbulence computed once and cached, no per-frame cost */
 .layer-gr {
   mix-blend-mode: screen;
-  filter: url(#warble-gr);
-}
-
-.layer-tree {
-  filter: url(#warble-tree);
-}
-
-.layer-mid,
-.layer-fg {
-  filter: url(#warble-subtle);
+  /* warble filter removed — will reimplement via baked image sequence */
 }
 
 /* loading screen — plain white; hero bezier-fades it out */
@@ -66,16 +54,6 @@ html, body {
   inset: 0;
   background: #fff;
   z-index: 100;
-}
-
-/* transition video */
-.transition-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 50;
 }
 
 /* white flash overlay — covers load, explore transition, video cuts */

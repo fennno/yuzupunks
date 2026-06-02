@@ -44,9 +44,6 @@ export default function Home() {
   const containerRef   = useRef<HTMLDivElement>(null)
   const audioRef       = useRef<HTMLAudioElement>(null)
   const pageFlashRef   = useRef<HTMLDivElement>(null)
-  const treeNoiseRef   = useRef<SVGFETurbulenceElement>(null)
-  const subtleNoiseRef = useRef<SVGFETurbulenceElement>(null)
-  const grNoiseRef     = useRef<SVGFETurbulenceElement>(null)
   const orientationRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null)
 
   // ── Preload images then swap out of white loading screen ──────────────────
@@ -107,8 +104,6 @@ export default function Home() {
       })
     }, containerRef)
 
-    // Warble seed animation dropped for now — static SVG displacement stays (one-time GPU cost).
-    // Will revisit with baked image-sequence approach for mobile performance.
 
     // god ray flicker
     gsap.to('.layer-gr', { opacity: 0.3, duration: 1.2, repeat: -1, ease: 'steps(8)', yoyo: true, delay: 7 })
@@ -192,13 +187,6 @@ export default function Home() {
   const enterInterior = () => {
     if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
 
-    // Restore full fps — hero uses 12fps ticker which makes the zoom crawl on mobile
-    gsap.ticker.fps(60)
-
-    // Strip SVG filters before zoom — feTurbulence is expensive at larger scales on mobile
-    document.querySelectorAll<HTMLElement>('.layer-tree, .layer-mid, .layer-fg, .layer-gr')
-      .forEach(el => { el.style.filter = 'none' })
-
     gsap.to('.ui', { opacity: 0, duration: 0.25, ease: 'power2.in' })
 
     // transformOrigin math: door is visually at ~85% of viewport.
@@ -264,25 +252,6 @@ export default function Home() {
         <InteriorScene onExit={() => setPhase('hero')} />
       ) : (
         <main ref={containerRef} className="hero">
-
-          <svg width="0" height="0" style={{ position: 'absolute' }}>
-            <defs>
-              <filter id="warble-tree" x="-5%" y="-5%" width="110%" height="110%">
-                <feTurbulence ref={treeNoiseRef} type="turbulence" baseFrequency="0.007" numOctaves="1" seed="1" result="noise"/>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
-              </filter>
-              {/* fg and mid-bg share identical warble settings */}
-              <filter id="warble-subtle" x="-5%" y="-5%" width="110%" height="110%">
-                <feTurbulence ref={subtleNoiseRef} type="turbulence" baseFrequency="0.004" numOctaves="1" seed="1" result="noise"/>
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale="1" xChannelSelector="R" yChannelSelector="G"/>
-              </filter>
-              <filter id="warble-gr" x="-10%" y="-10%" width="120%" height="120%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blurred"/>
-                <feTurbulence ref={grNoiseRef} type="turbulence" baseFrequency="0.018" numOctaves="1" seed="1" result="noise"/>
-                <feDisplacementMap in="blurred" in2="noise" scale="10" xChannelSelector="R" yChannelSelector="G"/>
-              </filter>
-            </defs>
-          </svg>
 
           <div className="layers">
             <img src="/layers/far-bg.png" className="layer layer-far"  alt="" />
