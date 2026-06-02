@@ -18,9 +18,6 @@ export default function Home() {
     gsap.ticker.fps(12)
 
     const ctx = gsap.context(() => {
-      // center mid-bg via GSAP so the offset survives GSAP's transform takeover
-      gsap.set('.layer-mid', { xPercent: -50 })
-
       const tl = gsap.timeline()
 
       // main pan + zoom
@@ -94,9 +91,9 @@ export default function Home() {
       delay: 7,
     })
 
-    // logo: subtle 3fps shake
+    // logo: subtle 3fps shake + tilt
     gsap.to('.logo', {
-      x: 1, y: 0.8,
+      x: 0.5, y: 0.4, rotation: 0.3,
       duration: 0.33,
       repeat: -1,
       ease: 'steps(1)',

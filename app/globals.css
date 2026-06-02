@@ -30,11 +30,12 @@ html, body {
   user-select: none;
 }
 
-/* mid-bg is wider than other layers — fix height to match original portrait ratio, center it */
+/* mid-bg wider canvas — force same portrait height as other layers, cover-crop from center */
 .layer-mid {
   height: calc(100vw * 2.6667);
-  width: auto;
-  left: 50%;
+  width: 100%;
+  object-fit: cover;
+  object-position: center top;
 }
 
 .layer-gr {
