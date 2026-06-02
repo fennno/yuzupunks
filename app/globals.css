@@ -34,21 +34,31 @@ html, body {
   mix-blend-mode: screen;
 }
 
+.layer-tree {
+  filter: url(#warble-tree);
+}
+
+.layer-mid,
+.layer-fg {
+  filter: url(#warble-subtle);
+}
+
 .ui {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
-  padding: 0 6vw 10vh;
+  padding: 10vw 6vw 0;
   z-index: 10;
 }
 
 .logo {
-  width: 50%;
-  max-width: 240px;
+  width: 86%;
+  max-width: 384px;
   height: auto;
   image-rendering: pixelated;
   opacity: 0;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.35));
 }
