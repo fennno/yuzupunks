@@ -77,24 +77,35 @@ html, body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 5vw;
+  gap: 6vw;
   margin-top: 4vw;
   opacity: 0;
 }
 
-.buttons a {
-  text-decoration: none;
-  display: block;
-}
-
 .btn {
-  display: block;
-  height: auto;
-  image-rendering: pixelated;
-  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.35));
+  font-family: var(--font-display), 'Fredoka One', cursive;
+  font-size: clamp(31px, 10vw, 51px);
+  color: #f4ff2a;
+  -webkit-text-stroke: 0.11em #3db515;
+  paint-order: stroke fill;
+  text-decoration: none;
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
+  display: block;
+  line-height: 1;
+
+  /* spring back on release */
+  transition: transform 0.35s cubic-bezier(0.22, 0.49, 0, 0.96);
 }
 
-.btn-shop    { width: 28vw; max-width: 130px; }
-.btn-explore { width: 34vw; max-width: 158px; }
+.btn:hover {
+  transform: scale(0.95) translateY(2px);
+  transition: transform 0.08s cubic-bezier(0.22, 0.49, 0, 0.96);
+}
+
+.btn:active {
+  transform: scale(0.88) translateY(5px);
+  transition: transform 0.05s cubic-bezier(0.22, 0.49, 0, 0.96);
+}

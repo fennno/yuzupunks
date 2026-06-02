@@ -150,12 +150,8 @@ export default function Home() {
         <img src="/logo.png" className="logo" alt="Yuzu Punks" />
 
         <div className="buttons">
-          <a href="https://shop.yuzupunks.com" target="_blank" rel="noopener noreferrer">
-            <img src="/shop-btn.png" className="btn btn-shop" alt="Shop" />
-          </a>
-          <a href="#">
-            <img src="/explore-btn.png" className="btn btn-explore" alt="Explore" />
-          </a>
+          <a href="https://shop.yuzupunks.com" target="_blank" rel="noopener noreferrer" className="btn">Shop</a>
+          <a href="#" className="btn">Explore</a>
         </div>
       </div>
 
