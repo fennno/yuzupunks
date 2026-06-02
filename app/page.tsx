@@ -6,7 +6,7 @@ import { CustomEase } from 'gsap/CustomEase'
 
 gsap.registerPlugin(CustomEase)
 CustomEase.create('snap',    '.22,.49,0,.96')
-CustomEase.create('zoomOut', '.6,.02,.95,.99')  // very fast front, almost flat back
+CustomEase.create('zoomOut', '.6,.02,.95,.99')
 
 export default function Home() {
   const containerRef   = useRef<HTMLDivElement>(null)
@@ -30,10 +30,10 @@ export default function Home() {
       // far layer parallax lag
       tl.fromTo('.layer-far', { yPercent: 8 }, { yPercent: 0, duration: 3, ease: 'snap' }, 0)
 
-      // tree: starts scaled up and high, lands at natural position — sells the zoom depth
+      // tree: less aggressive start, resolves faster
       tl.fromTo('.layer-tree',
-        { scale: 1.4, yPercent: -18 },
-        { scale: 1.0, yPercent:   0, duration: 4.5, ease: 'snap' },
+        { scale: 1.2, yPercent: -10 },
+        { scale: 1.0, yPercent:   0, duration: 2.5, ease: 'snap' },
         0
       )
 
@@ -47,14 +47,14 @@ export default function Home() {
         1
       )
 
-      // logo
-      tl.fromTo('.logo',
+      // logo + buttons fade in together
+      tl.fromTo('.logo, .buttons',
         { opacity: 0, scale: 0.92 },
         { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' },
         2.5
       )
 
-      // ambient zoom out — fast front, almost imperceptible back half
+      // ambient zoom out
       tl.to('.layers', {
         scale: 0.88,
         duration: 18,
@@ -63,10 +63,10 @@ export default function Home() {
 
     }, containerRef)
 
-    // warble: tree
+    // warble: tree — halved frequency
     if (treeNoiseRef.current) {
       gsap.to(treeNoiseRef.current, {
-        attr: { seed: 4 }, duration: 1.33, repeat: -1, ease: 'steps(4)', yoyo: true,
+        attr: { seed: 4 }, duration: 2.66, repeat: -1, ease: 'steps(4)', yoyo: true,
       })
     }
     // warble: mid + fg
@@ -81,7 +81,7 @@ export default function Home() {
         attr: { seed: 6 }, duration: 1.6, repeat: -1, ease: 'steps(4)', yoyo: true,
       })
     }
-    // god ray opacity flicker — starts after fade-in settles (~t=7)
+    // god ray opacity flicker
     gsap.to('.layer-gr', {
       opacity: 0.3,
       duration: 2.5,
@@ -91,14 +91,25 @@ export default function Home() {
       delay: 7,
     })
 
-    // logo: subtle 3fps shake + tilt
+    // logo shake — halved frequency
     gsap.to('.logo', {
       x: 0.5, y: 0.4, rotation: 0.3,
-      duration: 0.33,
+      duration: 0.66,
       repeat: -1,
       ease: 'steps(1)',
       yoyo: true,
       delay: 3.7,
+    })
+
+    // button shake — same frequency as logo, slight stagger so they're not in sync
+    gsap.to('.btn', {
+      x: 0.5, y: 0.4, rotation: 0.3,
+      duration: 0.66,
+      repeat: -1,
+      ease: 'steps(1)',
+      yoyo: true,
+      delay: 3.7,
+      stagger: 0.15,
     })
 
     return () => {
@@ -137,7 +148,17 @@ export default function Home() {
 
       <div className="ui">
         <img src="/logo.png" className="logo" alt="Yuzu Punks" />
+
+        <div className="buttons">
+          <a href="https://shop.yuzupunks.com" target="_blank" rel="noopener noreferrer">
+            <img src="/shop-btn.png" className="btn btn-shop" alt="Shop" />
+          </a>
+          <a href="#">
+            <img src="/explore-btn.png" className="btn btn-explore" alt="Explore" />
+          </a>
+        </div>
       </div>
+
     </main>
   )
 }

@@ -64,10 +64,37 @@ html, body {
 }
 
 .logo {
-  width: 86%;
-  max-width: 384px;
+  width: 77%;
+  max-width: 346px;
   height: auto;
   image-rendering: pixelated;
   opacity: 0;
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.35));
+  margin-top: -10px;
 }
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5vw;
+  margin-top: 4vw;
+  opacity: 0;
+}
+
+.buttons a {
+  text-decoration: none;
+  display: block;
+}
+
+.btn {
+  display: block;
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.35));
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-shop    { width: 28vw; max-width: 130px; }
+.btn-explore { width: 34vw; max-width: 158px; }
