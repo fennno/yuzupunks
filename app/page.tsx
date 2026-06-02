@@ -7,7 +7,7 @@ import InteriorScene from './components/InteriorScene'
 
 gsap.registerPlugin(CustomEase)
 CustomEase.create('snap',    '.22,.49,0,.96')
-CustomEase.create('zoomBurst', '.86,.04,.59,.94')
+CustomEase.create('zoomBurst', '.87,-.09,.93,.67')
 
 type Phase = 'loading' | 'hero' | 'interior'
 
@@ -188,24 +188,31 @@ export default function Home() {
     }
   }, [phase])
 
-  // ── Explore: GSAP zoom — single curve, lower anchor ─────────────────────
+  // ── Explore: GSAP zoom — single curve, door anchor ───────────────────────
   const enterInterior = () => {
     if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
 
+    // Restore full fps — hero uses 12fps ticker which makes the zoom crawl on mobile
+    gsap.ticker.fps(60)
+
+    // Strip SVG filters before zoom — feTurbulence is expensive at larger scales on mobile
+    document.querySelectorAll<HTMLElement>('.layer-tree, .layer-mid, .layer-fg, .layer-gr')
+      .forEach(el => { el.style.filter = 'none' })
+
     gsap.to('.ui', { opacity: 0, duration: 0.25, ease: 'power2.in' })
 
-    // Full 1.8s on the exact cubic-bezier, no power2 preamble
-    // overwrite:true kills the breathe animation so they don't fight
+    // transformOrigin math: door is visually at ~85% of viewport.
+    // .layers has yPercent:-33 (translateY -33vh) so in element coords: 85 + 33 = 118%
     gsap.to('.layers', {
-      scale: 1.55,
-      transformOrigin: '50% 92%',
+      scale: 1.6,
+      transformOrigin: '50% 118%',
       duration: 1.8,
       ease: 'zoomBurst',
       overwrite: true,
       onComplete: () => setPhase('interior'),
     })
 
-    // White flash enters on the back half
+    // White flash on back half
     gsap.to(pageFlashRef.current, {
       opacity: 1,
       duration: 0.9,
