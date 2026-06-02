@@ -6,9 +6,10 @@ import { CustomEase } from 'gsap/CustomEase'
 import InteriorScene from './components/InteriorScene'
 
 gsap.registerPlugin(CustomEase)
-CustomEase.create('snap', '.22,.49,0,.96')
+CustomEase.create('snap',    '.22,.49,0,.96')
+CustomEase.create('zoomBurst', '.86,.04,.59,.94')
 
-type Phase = 'loading' | 'hero' | 'transition' | 'interior'
+type Phase = 'loading' | 'hero' | 'interior'
 
 const LAYER_SRCS = [
   '/layers/far-bg.png',
@@ -19,7 +20,6 @@ const LAYER_SRCS = [
   '/logo.png',
 ]
 
-// ── Speaker SVG icons ─────────────────────────────────────────────────────────
 function IconSpeaker() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -37,20 +37,18 @@ function IconMute() {
 }
 
 export default function Home() {
-  const [phase, setPhase]   = useState<Phase>('loading')
-  const [muted, setMuted]   = useState(false)
+  const [phase, setPhase] = useState<Phase>('loading')
+  const [muted, setMuted] = useState(false)
 
-  const containerRef    = useRef<HTMLDivElement>(null)
-  const videoRef        = useRef<HTMLVideoElement>(null)
-  const audioRef        = useRef<HTMLAudioElement>(null)
-  const pageFlashRef    = useRef<HTMLDivElement>(null)
-  const flashStartedRef = useRef(false)
-  const treeNoiseRef    = useRef<SVGFETurbulenceElement>(null)
-  const subtleNoiseRef  = useRef<SVGFETurbulenceElement>(null)
-  const grNoiseRef      = useRef<SVGFETurbulenceElement>(null)
-  const orientationRef  = useRef<((e: DeviceOrientationEvent) => void) | null>(null)
+  const containerRef   = useRef<HTMLDivElement>(null)
+  const audioRef       = useRef<HTMLAudioElement>(null)
+  const pageFlashRef   = useRef<HTMLDivElement>(null)
+  const treeNoiseRef   = useRef<SVGFETurbulenceElement>(null)
+  const subtleNoiseRef = useRef<SVGFETurbulenceElement>(null)
+  const grNoiseRef     = useRef<SVGFETurbulenceElement>(null)
+  const orientationRef = useRef<((e: DeviceOrientationEvent) => void) | null>(null)
 
-  // ── Preload images then transition from white loading screen ───────────────
+  // ── Preload images then swap out of white loading screen ──────────────────
   useEffect(() => {
     Promise.all(LAYER_SRCS.map(src => new Promise<void>(resolve => {
       const img = new Image()
@@ -60,32 +58,26 @@ export default function Home() {
     }))).then(() => setPhase('hero'))
   }, [])
 
-  // ── Start audio on first user interaction (required by browsers) ───────────
+  // ── Start audio on first user interaction ─────────────────────────────────
   useEffect(() => {
-    const startAudio = () => {
-      audioRef.current?.play().catch(() => {})
-    }
-    document.addEventListener('click',      startAudio, { once: true })
-    document.addEventListener('touchstart', startAudio, { once: true })
+    const start = () => { audioRef.current?.play().catch(() => {}) }
+    document.addEventListener('click',      start, { once: true })
+    document.addEventListener('touchstart', start, { once: true })
     return () => {
-      document.removeEventListener('click',      startAudio)
-      document.removeEventListener('touchstart', startAudio)
+      document.removeEventListener('click',      start)
+      document.removeEventListener('touchstart', start)
     }
   }, [])
 
-  // ── Hero animations ────────────────────────────────────────────────────────
+  // ── Hero ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'hero') return
 
     gsap.ticker.fps(12)
-    // Desktop = animate warble seeds (GSAP steps).
-    // Mobile  = seeds stay static; feTurbulence result cached once — no per-frame GPU cost.
-    const isMobile = window.matchMedia('(pointer: coarse)').matches
 
     // Bezier-fade white loading overlay out
-    if (pageFlashRef.current) {
+    if (pageFlashRef.current)
       gsap.to(pageFlashRef.current, { opacity: 0, duration: 0.9, ease: 'power2.inOut', delay: 0.05 })
-    }
 
     const ctx = gsap.context(() => {
       gsap.set('.layers',         { scale: 1.8, yPercent: -3 })
@@ -96,30 +88,21 @@ export default function Home() {
       gsap.set('.logo, .buttons', { opacity: 0, scale: 0.92 })
 
       const tl = gsap.timeline()
-
       tl.to('.layers',     { scale: 1.0, yPercent: -33, duration: 5,   ease: 'snap' }, 0)
       tl.to('.layer-far',  { yPercent: 0,               duration: 5,   ease: 'snap' }, 0)
       tl.to('.layer-tree', { scale: 1.0, yPercent: 0,   duration: 4,   ease: 'snap' }, 0)
       tl.to('.layer-mid',  { yPercent: 0,               duration: 0.3, ease: 'snap' }, 0)
-
-      tl.fromTo('.layer-gr',
-        { opacity: 0 },
-        { opacity: 0.5, duration: 6, ease: 'snap' },
-        1
-      )
-
+      tl.fromTo('.layer-gr', { opacity: 0 }, { opacity: 0.5, duration: 6, ease: 'snap' }, 1)
       tl.to('.logo, .buttons', { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' }, 3.5)
     }, containerRef)
 
-    // ── Warble seed animation — desktop only; mobile uses static (cached) warp ──
-    if (!isMobile) {
-      if (treeNoiseRef.current)
-        gsap.to(treeNoiseRef.current,   { attr: { seed: 4 }, duration: 2.66, repeat: -1, ease: 'steps(4)', yoyo: true })
-      if (subtleNoiseRef.current)
-        gsap.to(subtleNoiseRef.current, { attr: { seed: 4 }, duration: 2,    repeat: -1, ease: 'steps(4)', yoyo: true })
-      if (grNoiseRef.current)
-        gsap.to(grNoiseRef.current,     { attr: { seed: 6 }, duration: 1.6,  repeat: -1, ease: 'steps(4)', yoyo: true })
-    }
+    // ── Warble seed animation — all devices ───────────────────────────────────
+    if (treeNoiseRef.current)
+      gsap.to(treeNoiseRef.current,   { attr: { seed: 4 }, duration: 2.66, repeat: -1, ease: 'steps(4)', yoyo: true })
+    if (subtleNoiseRef.current)
+      gsap.to(subtleNoiseRef.current, { attr: { seed: 4 }, duration: 2,    repeat: -1, ease: 'steps(4)', yoyo: true })
+    if (grNoiseRef.current)
+      gsap.to(grNoiseRef.current,     { attr: { seed: 6 }, duration: 1.6,  repeat: -1, ease: 'steps(4)', yoyo: true })
 
     // god ray flicker
     gsap.to('.layer-gr', { opacity: 0.3, duration: 1.2, repeat: -1, ease: 'steps(8)', yoyo: true, delay: 7 })
@@ -128,59 +111,60 @@ export default function Home() {
     gsap.to('.logo', { x: 0.5, y: 0.4, rotation: 0.3, duration: 0.66, repeat: -1, ease: 'steps(1)', yoyo: true, delay: 3.7 })
     gsap.to('.btn',  { x: 0.5, y: 0.4, rotation: 0.3, duration: 0.66, repeat: -1, ease: 'steps(1)', yoyo: true, delay: 3.7, stagger: 0.15 })
 
-    // ── Button press/release (GSAP handles transform; CSS :active can't override inline styles) ──
+    // ── Button press/release ──────────────────────────────────────────────────
     const btns = document.querySelectorAll<HTMLElement>('.btn')
-    type BtnHandler = { el: HTMLElement; press: () => void; release: () => void }
-    const pressHandlers: BtnHandler[] = []
+    type H = { el: HTMLElement; press: () => void; release: () => void }
+    const handlers: H[] = []
     btns.forEach(btn => {
-      const press   = () => gsap.to(btn, { scale: 0.88, y: 5, duration: 0.05, ease: 'power2.in',  overwrite: 'auto' })
-      const release = () => gsap.to(btn, { scale: 1,    y: 0, duration: 0.35, ease: 'snap',        overwrite: 'auto' })
+      const press   = () => gsap.to(btn, { scale: 0.88, y: 5, duration: 0.05, ease: 'power2.in', overwrite: 'auto' })
+      const release = () => gsap.to(btn, { scale: 1,    y: 0, duration: 0.35, ease: 'snap',       overwrite: 'auto' })
       btn.addEventListener('mousedown',  press)
       btn.addEventListener('touchstart', press,   { passive: true })
       btn.addEventListener('mouseup',    release)
       btn.addEventListener('touchend',   release)
       btn.addEventListener('mouseleave', release)
-      pressHandlers.push({ el: btn, press, release })
+      handlers.push({ el: btn, press, release })
     })
 
     // ── Gyro parallax ─────────────────────────────────────────────────────────
-    const farX  = gsap.quickTo('.layer-far',  'x', { duration: 0.8, ease: 'power2.out' })
-    const farY  = gsap.quickTo('.layer-far',  'y', { duration: 0.8, ease: 'power2.out' })
-    const midX  = gsap.quickTo('.layer-mid',  'x', { duration: 0.8, ease: 'power2.out' })
-    const midY  = gsap.quickTo('.layer-mid',  'y', { duration: 0.8, ease: 'power2.out' })
-    const treeX = gsap.quickTo('.layer-tree', 'x', { duration: 0.8, ease: 'power2.out' })
-    const treeY = gsap.quickTo('.layer-tree', 'y', { duration: 0.8, ease: 'power2.out' })
-    const fgX   = gsap.quickTo('.layer-fg',   'x', { duration: 0.8, ease: 'power2.out' })
-    const fgY   = gsap.quickTo('.layer-fg',   'y', { duration: 0.8, ease: 'power2.out' })
+    const farX  = gsap.quickTo('.layer-far',  'x', { duration: 0.5, ease: 'power2.out' })
+    const farY  = gsap.quickTo('.layer-far',  'y', { duration: 0.5, ease: 'power2.out' })
+    const midX  = gsap.quickTo('.layer-mid',  'x', { duration: 0.5, ease: 'power2.out' })
+    const midY  = gsap.quickTo('.layer-mid',  'y', { duration: 0.5, ease: 'power2.out' })
+    const treeX = gsap.quickTo('.layer-tree', 'x', { duration: 0.5, ease: 'power2.out' })
+    const treeY = gsap.quickTo('.layer-tree', 'y', { duration: 0.5, ease: 'power2.out' })
+    const fgX   = gsap.quickTo('.layer-fg',   'x', { duration: 0.5, ease: 'power2.out' })
+    const fgY   = gsap.quickTo('.layer-fg',   'y', { duration: 0.5, ease: 'power2.out' })
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      const x = (e.gamma ?? 0) / 30
+      const x = (e.gamma ?? 0) / 30   // -1 to 1 across ±30°
       const y = ((e.beta  ?? 0) - 45) / 30
-      farX(x * 4);   farY(y * 3)
-      midX(x * 7);   midY(y * 5)
-      treeX(x * 11); treeY(y * 8)
-      fgX(x * 16);   fgY(y * 11)
+      farX(x * 8);   farY(y * 6)
+      midX(x * 14);  midY(y * 10)
+      treeX(x * 20); treeY(y * 15)
+      fgX(x * 28);   fgY(y * 20)
     }
     orientationRef.current = handleOrientation
 
-    const setupGyro = async () => {
+    // iOS 13+: requestPermission must be called from inside a user gesture.
+    // Use .then() (not async/await) so the call stays synchronous in the event handler.
+    const setupGyro = () => {
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        // iOS 13+ — must be triggered by a user gesture
-        try {
-          const res = await (DeviceOrientationEvent as any).requestPermission()
-          if (res === 'granted') window.addEventListener('deviceorientation', handleOrientation)
-        } catch (_) {}
+        ;(DeviceOrientationEvent as any).requestPermission()
+          .then((res: string) => {
+            if (res === 'granted') window.addEventListener('deviceorientation', handleOrientation)
+          })
+          .catch(() => {})
       } else {
-        // Android / non-iOS — no permission needed, start immediately
         window.addEventListener('deviceorientation', handleOrientation)
       }
     }
 
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      // iOS: wait for first touch before requesting permission
+      // iOS: must wait for user gesture — first touchstart triggers permission prompt
       document.addEventListener('touchstart', setupGyro, { once: true })
     } else {
-      // Android / desktop: wire up immediately
+      // Android / desktop: no permission needed, start immediately
       setupGyro()
     }
 
@@ -188,7 +172,7 @@ export default function Home() {
       ctx.revert()
       gsap.ticker.fps(60)
       if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
-      pressHandlers.forEach(({ el, press, release }) => {
+      handlers.forEach(({ el, press, release }) => {
         el.removeEventListener('mousedown',  press)
         el.removeEventListener('touchstart', press)
         el.removeEventListener('mouseup',    release)
@@ -198,31 +182,36 @@ export default function Home() {
     }
   }, [phase])
 
-  // ── Play transition video ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (phase !== 'transition' || !videoRef.current) return
-    videoRef.current.play().catch(() => setPhase('interior'))
-  }, [phase])
-
-  // ── Flash white near end of video ─────────────────────────────────────────
-  const handleTimeUpdate = () => {
-    const vid   = videoRef.current
-    const flash = pageFlashRef.current
-    if (!vid || !flash || flashStartedRef.current || isNaN(vid.duration)) return
-    if (vid.duration - vid.currentTime <= 1.2) {
-      flashStartedRef.current = true
-      gsap.to(flash, { opacity: 1, duration: 1.2, ease: 'steps(10)' })
-    }
-  }
-
-  // ── Explore handler ────────────────────────────────────────────────────────
+  // ── Explore: GSAP zoom transition (no video) ──────────────────────────────
   const enterInterior = () => {
     if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
-    gsap.to('.ui', { opacity: 0, duration: 0.3 })
-    setTimeout(() => {
-      flashStartedRef.current = false
-      setPhase('transition')
-    }, 300)
+
+    gsap.to('.ui', { opacity: 0, duration: 0.25, ease: 'power2.in' })
+
+    const tl = gsap.timeline({ onComplete: () => setPhase('interior') })
+
+    // First 0.9s — slow build-up
+    tl.to('.layers', {
+      scale: 1.18,
+      transformOrigin: '50% 78%',
+      duration: 0.9,
+      ease: 'power2.in',
+    })
+
+    // Second 0.9s — burst toward lower third with the custom curve
+    tl.to('.layers', {
+      scale: 1.55,
+      transformOrigin: '50% 78%',
+      duration: 0.9,
+      ease: 'zoomBurst',
+    })
+
+    // White flash rides in on the second half
+    tl.to(pageFlashRef.current, {
+      opacity: 1,
+      duration: 0.9,
+      ease: 'power2.in',
+    }, 0.9)
   }
 
   // ── Mute toggle ───────────────────────────────────────────────────────────
@@ -232,11 +221,9 @@ export default function Home() {
     setMuted(m => !m)
   }
 
-  // ── Loading screen ─────────────────────────────────────────────────────────
+  // ── Loading screen ────────────────────────────────────────────────────────
   if (phase === 'loading') return <div className="loading-screen" />
 
-  // ── Single render tree for all post-load phases ────────────────────────────
-  // Audio element persists across hero ↔ interior so music doesn't restart
   return (
     <>
       <audio ref={audioRef} src="/music.mp3" loop preload="auto" />
@@ -250,24 +237,13 @@ export default function Home() {
       ) : (
         <main ref={containerRef} className="hero">
 
-          {phase === 'transition' && (
-            <video
-              ref={videoRef}
-              src="/transition.mp4"
-              muted
-              playsInline
-              className="transition-video"
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={() => setPhase('interior')}
-            />
-          )}
-
           <svg width="0" height="0" style={{ position: 'absolute' }}>
             <defs>
               <filter id="warble-tree" x="-5%" y="-5%" width="110%" height="110%">
                 <feTurbulence ref={treeNoiseRef} type="turbulence" baseFrequency="0.007" numOctaves="1" seed="1" result="noise"/>
                 <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
               </filter>
+              {/* fg and mid-bg share identical warble settings */}
               <filter id="warble-subtle" x="-5%" y="-5%" width="110%" height="110%">
                 <feTurbulence ref={subtleNoiseRef} type="turbulence" baseFrequency="0.004" numOctaves="1" seed="1" result="noise"/>
                 <feDisplacementMap in="SourceGraphic" in2="noise" scale="1" xChannelSelector="R" yChannelSelector="G"/>
@@ -296,7 +272,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* White flash — covers load fade-in, explore click, and video cuts */}
           <div ref={pageFlashRef} className="flash-overlay" style={{ opacity: 1 }} />
 
         </main>

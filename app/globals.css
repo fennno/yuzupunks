@@ -38,6 +38,11 @@ html, body {
   object-position: center top;
 }
 
+/* fg nudged down — dial this to taste */
+.layer-fg {
+  top: 10px;
+}
+
 /* warble filters — applied on all devices
    Desktop: seed animates (GSAP steps) = choppy warp movement
    Mobile:  seed is static = turbulence computed once and cached, no per-frame cost */
@@ -95,9 +100,10 @@ html, body {
 
 .logo {
   display: block;
-  width: 77%;
-  max-width: 346px;
+  /* vw-based width avoids flex-item percentage ambiguity that squishes on mobile */
+  width: min(77vw, 346px);
   height: auto;
+  flex-shrink: 0;
   image-rendering: pixelated;
   opacity: 0;
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.35));
