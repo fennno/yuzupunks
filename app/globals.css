@@ -30,6 +30,13 @@ html, body {
   user-select: none;
 }
 
+/* mid-bg is wider than other layers — fix height to match original portrait ratio, center it */
+.layer-mid {
+  height: calc(100vw * 2.6667);
+  width: auto;
+  left: 50%;
+}
+
 .layer-gr {
   mix-blend-mode: screen;
   filter: url(#warble-gr);

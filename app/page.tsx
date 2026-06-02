@@ -18,6 +18,9 @@ export default function Home() {
     gsap.ticker.fps(12)
 
     const ctx = gsap.context(() => {
+      // center mid-bg via GSAP so the offset survives GSAP's transform takeover
+      gsap.set('.layer-mid', { xPercent: -50 })
+
       const tl = gsap.timeline()
 
       // main pan + zoom
