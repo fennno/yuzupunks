@@ -21,48 +21,61 @@ interface SceneNode {
   }
 }
 
+// ─── Naming convention ─────────────────────────────────────────────────────────
+// Each node ID maps 1:1 to a PNG file at /public/interior/[id].png
+//
+// ID format:  [room]-[facing]
+//   room    = kebab-case room name  (entry, main, loft, kitchen, hall, bath, etc.)
+//   facing  = n | s | e | w        (camera direction — omit if only one view per room)
+//
+// Examples:
+//   entry.png          — opening shot, player spawn
+//   main-n.png         — main room looking north
+//   main-e.png         — main room looking east
+//   loft-s.png         — loft looking south (down the stairs)
+//   kitchen.png        — kitchen, single view
+//
+// Drop renders into /public/interior/ and add nodes below.
+// connections mirror the physical layout — north in one node → south in the target.
+// ──────────────────────────────────────────────────────────────────────────────
+
 const NODES: Record<NodeId, SceneNode> = {
-  'living-room': {
-    image:  '/interior/living-room.png',
-    label:  'Living Room',
+  // ── Opening shot — the first thing the player sees ──────────────────────────
+  'entry': {
+    image:  '/interior/entry.png',   // ← your current placeholder goes here
+    label:  'Entry',
     connections: {
-      north: 'hallway',
-      east:  'kitchen',
+      north: 'main-n',
     },
   },
-  'hallway': {
-    image:  '/interior/hallway.png',
-    label:  'Hallway',
+
+  // ── Scaffold nodes — swap image paths as Blender renders come in ────────────
+  'main-n': {
+    image:  '/interior/main-n.png',
+    label:  'Main Room (N)',
     connections: {
-      south: 'living-room',
-      north: 'upstairs',
-      east:  'bathroom',
+      south: 'entry',
+      east:  'kitchen',
+      north: 'loft-s',
     },
   },
   'kitchen': {
     image:  '/interior/kitchen.png',
     label:  'Kitchen',
     connections: {
-      west: 'living-room',
+      west: 'main-n',
     },
   },
-  'upstairs': {
-    image:  '/interior/upstairs.png',
-    label:  'Upstairs',
+  'loft-s': {
+    image:  '/interior/loft-s.png',
+    label:  'Loft',
     connections: {
-      south: 'hallway',
-    },
-  },
-  'bathroom': {
-    image:  '/interior/bathroom.png',
-    label:  'Bathroom',
-    connections: {
-      west: 'hallway',
+      south: 'main-n',
     },
   },
 }
 
-const START_NODE: NodeId = 'living-room'
+const START_NODE: NodeId = 'entry'
 
 // ─── Arrow directions ──────────────────────────────────────────────────────────
 const ARROWS: { dir: keyof SceneNode['connections']; label: string; style: React.CSSProperties }[] = [

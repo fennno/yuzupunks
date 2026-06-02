@@ -38,6 +38,9 @@ html, body {
   object-position: center top;
 }
 
+/* warble filters — applied on all devices
+   Desktop: seed animates (GSAP steps) = choppy warp movement
+   Mobile:  seed is static = turbulence computed once and cached, no per-frame cost */
 .layer-gr {
   mix-blend-mode: screen;
   filter: url(#warble-gr);
@@ -52,43 +55,12 @@ html, body {
   filter: url(#warble-subtle);
 }
 
-/* dither posterization on the whole layer stack — desktop only */
-@media (pointer: fine) {
-  .layers {
-    filter: url(#dither);
-  }
-}
-
-/* remove all SVG filters on mobile — too expensive on mobile GPUs */
-@media (pointer: coarse) {
-  .layer-tree { filter: none; }
-  .layer-mid  { filter: none; }
-  .layer-fg   { filter: none; }
-  .layer-gr   { filter: none; }   /* mix-blend-mode: screen is a separate property, stays */
-}
-
-/* loading screen */
+/* loading screen — plain white; hero bezier-fades it out */
 .loading-screen {
   position: fixed;
   inset: 0;
-  background: #0a1a0a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #fff;
   z-index: 100;
-}
-
-.loading-pulse {
-  width: 10px;
-  height: 10px;
-  background: #FFF100;
-  border-radius: 50%;
-  animation: pulse 0.8s steps(4) infinite alternate;
-}
-
-@keyframes pulse {
-  from { transform: scale(1);   opacity: 1; }
-  to   { transform: scale(1.8); opacity: 0.4; }
 }
 
 /* transition video */
@@ -101,7 +73,7 @@ html, body {
   z-index: 50;
 }
 
-/* white flash overlay — sits above video and interior scene */
+/* white flash overlay — covers load, explore transition, video cuts */
 .flash-overlay {
   position: absolute;
   inset: 0;
@@ -135,9 +107,9 @@ html, body {
 
 .buttons {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 6vw;
+  gap: 2vw;
   margin-top: 4vw;
   opacity: 0;
 }
@@ -145,7 +117,8 @@ html, body {
 .btn {
   font-family: 'greycliff-cf', sans-serif;
   font-weight: 700;
-  font-size: clamp(28px, 9vw, 46px);
+  font-size: clamp(31px, 9.9vw, 51px);
+  text-transform: uppercase;
   color: #FFF100;
   -webkit-text-stroke: 0.11em #00A651;
   paint-order: stroke fill;
@@ -156,20 +129,28 @@ html, body {
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4));
   display: block;
   line-height: 1;
-
-  /* spring back on release */
-  transition: transform 0.35s cubic-bezier(0.22, 0.49, 0, 0.96);
+  /* press/release handled by GSAP — no CSS transition needed */
 }
 
-.btn:hover {
-  transform: scale(0.95) translateY(2px);
-  transition: transform 0.08s cubic-bezier(0.22, 0.49, 0, 0.96);
-}
+/* ── Mute button ────────────────────────────────────────────────────── */
 
-.btn:active {
-  transform: scale(0.88) translateY(5px);
-  transition: transform 0.05s cubic-bezier(0.22, 0.49, 0, 0.96);
+.mute-btn {
+  position: fixed;
+  bottom: 5vw;
+  right: 5vw;
+  z-index: 60;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  opacity: 0.5;
+  padding: 8px;
+  line-height: 0;
+  transition: opacity 0.2s ease;
+  touch-action: manipulation;
 }
+.mute-btn:hover  { opacity: 0.85; }
+.mute-btn:active { opacity: 1; }
 
 /* ── Interior scene ─────────────────────────────────────────────────── */
 
@@ -219,6 +200,7 @@ html, body {
   font-family: 'greycliff-cf', sans-serif;
   font-weight: 700;
   font-size: clamp(14px, 4vw, 20px);
+  text-transform: uppercase;
   color: #FFF100;
   -webkit-text-stroke: 0.08em #00A651;
   paint-order: stroke fill;
