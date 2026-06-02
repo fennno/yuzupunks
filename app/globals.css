@@ -40,7 +40,7 @@ html, body {
 
 /* fg nudged down — dial this to taste */
 .layer-fg {
-  top: 10px;
+  top: 15px;
 }
 
 /* warble filters — applied on all devices
@@ -156,6 +156,10 @@ html, body {
 }
 .mute-btn:hover  { opacity: 0.85; }
 .mute-btn:active { opacity: 1; }
+
+.gyro-btn {
+  right: calc(5vw + 52px);   /* sits just left of the mute button */
+}
 
 /* ── Interior scene ─────────────────────────────────────────────────── */
 

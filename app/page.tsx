@@ -37,8 +37,9 @@ function IconMute() {
 }
 
 export default function Home() {
-  const [phase, setPhase] = useState<Phase>('loading')
-  const [muted, setMuted] = useState(false)
+  const [phase, setPhase]         = useState<Phase>('loading')
+  const [muted, setMuted]         = useState(false)
+  const [showGyroBtn, setShowGyroBtn] = useState(false)  // iOS only: prompt button
 
   const containerRef   = useRef<HTMLDivElement>(null)
   const audioRef       = useRef<HTMLAudioElement>(null)
@@ -94,6 +95,16 @@ export default function Home() {
       tl.to('.layer-mid',  { yPercent: 0,               duration: 0.3, ease: 'snap' }, 0)
       tl.fromTo('.layer-gr', { opacity: 0 }, { opacity: 0.5, duration: 6, ease: 'snap' }, 1)
       tl.to('.logo, .buttons', { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' }, 3.5)
+
+      // Subtle breathe — starts after intro settles, 6s per cycle
+      gsap.to('.layers', {
+        scale: 1.015,
+        duration: 6,
+        ease: 'sine.inOut',
+        repeat: -1,
+        yoyo: true,
+        delay: 5.5,
+      })
     }, containerRef)
 
     // Warble seed animation dropped for now — static SVG displacement stays (one-time GPU cost).
@@ -156,10 +167,10 @@ export default function Home() {
     }
 
     if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      // iOS: must wait for user gesture — first touchstart triggers permission prompt
-      document.addEventListener('touchstart', setupGyro, { once: true })
+      // iOS: show a dedicated button — user taps it to trigger the permission dialog
+      setShowGyroBtn(true)
     } else {
-      // Android / desktop: no permission needed, start immediately
+      // Android / desktop: start immediately, no prompt needed
       setupGyro()
     }
 
@@ -184,11 +195,13 @@ export default function Home() {
     gsap.to('.ui', { opacity: 0, duration: 0.25, ease: 'power2.in' })
 
     // Full 1.8s on the exact cubic-bezier, no power2 preamble
+    // overwrite:true kills the breathe animation so they don't fight
     gsap.to('.layers', {
       scale: 1.55,
-      transformOrigin: '50% 92%',   // anchor near bottom of frame
+      transformOrigin: '50% 92%',
       duration: 1.8,
       ease: 'zoomBurst',
+      overwrite: true,
       onComplete: () => setPhase('interior'),
     })
 
@@ -199,6 +212,18 @@ export default function Home() {
       ease: 'power2.in',
       delay: 0.9,
     })
+  }
+
+  // ── Gyro permission (iOS only) ────────────────────────────────────────────
+  const handleGyroRequest = () => {
+    ;(DeviceOrientationEvent as any).requestPermission()
+      .then((res: string) => {
+        if (res === 'granted' && orientationRef.current) {
+          window.addEventListener('deviceorientation', orientationRef.current)
+        }
+        setShowGyroBtn(false)   // hide button whether granted or denied
+      })
+      .catch(() => setShowGyroBtn(false))
   }
 
   // ── Mute toggle ───────────────────────────────────────────────────────────
@@ -214,6 +239,15 @@ export default function Home() {
   return (
     <>
       <audio ref={audioRef} src="/music.mp3" loop preload="auto" />
+
+      {showGyroBtn && (
+        <button className="mute-btn gyro-btn" onClick={handleGyroRequest} aria-label="Enable tilt parallax">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+            <path d="M16.24 7.76C15.07 6.59 13.54 6 12 6V4c2.03 0 3.93.79 5.36 2.22L16.24 7.76zM7.76 16.24C8.93 17.41 10.46 18 12 18v2c-2.03 0-3.93-.79-5.36-2.22l1.12-1.54z" opacity="0.5"/>
+          </svg>
+        </button>
+      )}
 
       <button className="mute-btn" onClick={toggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
         {muted ? <IconMute /> : <IconSpeaker />}
