@@ -22,60 +22,36 @@ interface SceneNode {
 }
 
 // ─── Naming convention ─────────────────────────────────────────────────────────
-// Each node ID maps 1:1 to a PNG file at /public/interior/[id].png
+// Files live at /public/interior/explore-N.png
+// N is a sequential integer — just the next available number, no semantic meaning.
+// The node graph below defines all the spatial relationships; the filename is just an ID.
 //
-// ID format:  [room]-[facing]
-//   room    = kebab-case room name  (entry, main, loft, kitchen, hall, bath, etc.)
-//   facing  = n | s | e | w        (camera direction — omit if only one view per room)
+//   explore-1.png   ← opening shot, player spawn point
+//   explore-2.png   ← wherever explore-1 connects north/east/etc.
+//   explore-3.png   ← and so on
 //
-// Examples:
-//   entry.png          — opening shot, player spawn
-//   main-n.png         — main room looking north
-//   main-e.png         — main room looking east
-//   loft-s.png         — loft looking south (down the stairs)
-//   kitchen.png        — kitchen, single view
+// To add a new room:
+//   1. Drop explore-N.png into /public/interior/
+//   2. Add a new node entry below with the right connections
+//   3. Add the matching reverse connection in the node you're linking from
 //
-// Drop renders into /public/interior/ and add nodes below.
-// connections mirror the physical layout — north in one node → south in the target.
+// connections: north/south/east/west describe the camera move direction,
+// matching the arrow the player taps. They don't have to be literal compass — just
+// pick a consistent direction for each move and mirror it in the target node.
 // ──────────────────────────────────────────────────────────────────────────────
 
 const NODES: Record<NodeId, SceneNode> = {
-  // ── Opening shot — the first thing the player sees ──────────────────────────
-  'entry': {
-    image:  '/interior/entry.png',   // ← your current placeholder goes here
-    label:  'Entry',
+  'explore-1': {
+    image:  '/interior/explore-1.png',
+    label:  'explore-1',
     connections: {
-      north: 'main-n',
-    },
-  },
-
-  // ── Scaffold nodes — swap image paths as Blender renders come in ────────────
-  'main-n': {
-    image:  '/interior/main-n.png',
-    label:  'Main Room (N)',
-    connections: {
-      south: 'entry',
-      east:  'kitchen',
-      north: 'loft-s',
-    },
-  },
-  'kitchen': {
-    image:  '/interior/kitchen.png',
-    label:  'Kitchen',
-    connections: {
-      west: 'main-n',
-    },
-  },
-  'loft-s': {
-    image:  '/interior/loft-s.png',
-    label:  'Loft',
-    connections: {
-      south: 'main-n',
+      // add connections when you have more renders, e.g.:
+      // north: 'explore-2',
     },
   },
 }
 
-const START_NODE: NodeId = 'entry'
+const START_NODE: NodeId = 'explore-1'
 
 // ─── Arrow directions ──────────────────────────────────────────────────────────
 const ARROWS: { dir: keyof SceneNode['connections']; label: string; style: React.CSSProperties }[] = [

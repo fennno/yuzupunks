@@ -118,7 +118,6 @@ html, body {
   font-family: 'greycliff-cf', sans-serif;
   font-weight: 700;
   font-size: clamp(31px, 9.9vw, 51px);
-  text-transform: uppercase;
   color: #FFF100;
   -webkit-text-stroke: 0.11em #00A651;
   paint-order: stroke fill;

@@ -97,7 +97,7 @@ export default function Home() {
 
       const tl = gsap.timeline()
 
-      tl.to('.layers',     { scale: 1.0, yPercent: -44, duration: 5,   ease: 'snap' }, 0)
+      tl.to('.layers',     { scale: 1.0, yPercent: -33, duration: 5,   ease: 'snap' }, 0)
       tl.to('.layer-far',  { yPercent: 0,               duration: 5,   ease: 'snap' }, 0)
       tl.to('.layer-tree', { scale: 1.0, yPercent: 0,   duration: 4,   ease: 'snap' }, 0)
       tl.to('.layer-mid',  { yPercent: 0,               duration: 0.3, ease: 'snap' }, 0)
@@ -165,15 +165,24 @@ export default function Home() {
 
     const setupGyro = async () => {
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        // iOS 13+ — must be triggered by a user gesture
         try {
           const res = await (DeviceOrientationEvent as any).requestPermission()
           if (res === 'granted') window.addEventListener('deviceorientation', handleOrientation)
         } catch (_) {}
       } else {
+        // Android / non-iOS — no permission needed, start immediately
         window.addEventListener('deviceorientation', handleOrientation)
       }
     }
-    document.addEventListener('touchstart', setupGyro, { once: true })
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      // iOS: wait for first touch before requesting permission
+      document.addEventListener('touchstart', setupGyro, { once: true })
+    } else {
+      // Android / desktop: wire up immediately
+      setupGyro()
+    }
 
     return () => {
       ctx.revert()
@@ -189,13 +198,10 @@ export default function Home() {
     }
   }, [phase])
 
-  // ── Play transition video — fade white out to reveal it ───────────────────
+  // ── Play transition video ──────────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'transition' || !videoRef.current) return
     videoRef.current.play().catch(() => setPhase('interior'))
-    if (pageFlashRef.current) {
-      gsap.to(pageFlashRef.current, { opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.15 })
-    }
   }, [phase])
 
   // ── Flash white near end of video ─────────────────────────────────────────
@@ -212,16 +218,11 @@ export default function Home() {
   // ── Explore handler ────────────────────────────────────────────────────────
   const enterInterior = () => {
     if (orientationRef.current) window.removeEventListener('deviceorientation', orientationRef.current)
-    gsap.to('.ui', { opacity: 0, duration: 0.2 })
-    gsap.to(pageFlashRef.current, {
-      opacity: 1,
-      duration: 0.3,
-      ease: 'power2.in',
-      onComplete: () => {
-        flashStartedRef.current = false
-        setPhase('transition')
-      },
-    })
+    gsap.to('.ui', { opacity: 0, duration: 0.3 })
+    setTimeout(() => {
+      flashStartedRef.current = false
+      setPhase('transition')
+    }, 300)
   }
 
   // ── Mute toggle ───────────────────────────────────────────────────────────
