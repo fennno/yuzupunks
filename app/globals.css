@@ -71,6 +71,7 @@ html, body {
   opacity: 0;
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.35));
   margin-top: -10px;
+  margin-left: 10px;
 }
 
 .buttons {
@@ -83,10 +84,11 @@ html, body {
 }
 
 .btn {
-  font-family: var(--font-display), 'Fredoka One', cursive;
-  font-size: clamp(31px, 10vw, 51px);
-  color: #f4ff2a;
-  -webkit-text-stroke: 0.11em #3db515;
+  font-family: 'greycliff-cf', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 9vw, 46px);
+  color: #FFF100;
+  -webkit-text-stroke: 0.11em #00A651;
   paint-order: stroke fill;
   text-decoration: none;
   cursor: pointer;

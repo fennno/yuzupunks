@@ -17,44 +17,40 @@ export default function Home() {
   useEffect(() => {
     gsap.ticker.fps(12)
 
+    // mobile detection — SVG filter seed animation is too expensive on mobile GPUs
+    const isMobile = window.matchMedia('(pointer: coarse)').matches
+
     const ctx = gsap.context(() => {
       const tl = gsap.timeline()
 
-      // main pan + zoom
       tl.fromTo('.layers',
         { scale: 1.8, yPercent: -3 },
         { scale: 1.08, yPercent: -20, duration: 3, ease: 'snap' },
         0
       )
 
-      // far layer parallax lag
       tl.fromTo('.layer-far', { yPercent: 8 }, { yPercent: 0, duration: 3, ease: 'snap' }, 0)
 
-      // tree: less aggressive start, resolves faster
       tl.fromTo('.layer-tree',
         { scale: 1.2, yPercent: -10 },
-        { scale: 1.0, yPercent:   0, duration: 2.5, ease: 'snap' },
+        { scale: 1.0, yPercent: 0, duration: 2.5, ease: 'snap' },
         0
       )
 
-      // mid-bg snaps up from lower in first 0.3s
       tl.fromTo('.layer-mid', { yPercent: 10 }, { yPercent: 0, duration: 0.3, ease: 'snap' }, 0)
 
-      // god rays: fade in over 6s at half opacity
       tl.fromTo('.layer-gr',
         { opacity: 0 },
         { opacity: 0.5, duration: 6, ease: 'snap' },
         1
       )
 
-      // logo + buttons fade in together
       tl.fromTo('.logo, .buttons',
         { opacity: 0, scale: 0.92 },
         { opacity: 1, scale: 1, duration: 1.2, ease: 'snap' },
         2.5
       )
 
-      // ambient zoom out
       tl.to('.layers', {
         scale: 0.88,
         duration: 18,
@@ -63,25 +59,26 @@ export default function Home() {
 
     }, containerRef)
 
-    // warble: tree — halved frequency
-    if (treeNoiseRef.current) {
-      gsap.to(treeNoiseRef.current, {
-        attr: { seed: 4 }, duration: 2.66, repeat: -1, ease: 'steps(4)', yoyo: true,
-      })
+    // warble seed animation — desktop only, too expensive on mobile
+    if (!isMobile) {
+      if (treeNoiseRef.current) {
+        gsap.to(treeNoiseRef.current, {
+          attr: { seed: 4 }, duration: 2.66, repeat: -1, ease: 'steps(4)', yoyo: true,
+        })
+      }
+      if (subtleNoiseRef.current) {
+        gsap.to(subtleNoiseRef.current, {
+          attr: { seed: 4 }, duration: 2, repeat: -1, ease: 'steps(4)', yoyo: true,
+        })
+      }
+      if (grNoiseRef.current) {
+        gsap.to(grNoiseRef.current, {
+          attr: { seed: 6 }, duration: 1.6, repeat: -1, ease: 'steps(4)', yoyo: true,
+        })
+      }
     }
-    // warble: mid + fg
-    if (subtleNoiseRef.current) {
-      gsap.to(subtleNoiseRef.current, {
-        attr: { seed: 4 }, duration: 2, repeat: -1, ease: 'steps(4)', yoyo: true,
-      })
-    }
-    // warble + flicker: god rays
-    if (grNoiseRef.current) {
-      gsap.to(grNoiseRef.current, {
-        attr: { seed: 6 }, duration: 1.6, repeat: -1, ease: 'steps(4)', yoyo: true,
-      })
-    }
-    // god ray opacity flicker
+
+    // god ray flicker (opacity only — cheap, fine on mobile)
     gsap.to('.layer-gr', {
       opacity: 0.3,
       duration: 2.5,
@@ -91,7 +88,7 @@ export default function Home() {
       delay: 7,
     })
 
-    // logo shake — halved frequency
+    // logo + button shake
     gsap.to('.logo', {
       x: 0.5, y: 0.4, rotation: 0.3,
       duration: 0.66,
@@ -100,8 +97,6 @@ export default function Home() {
       yoyo: true,
       delay: 3.7,
     })
-
-    // button shake — same frequency as logo, slight stagger so they're not in sync
     gsap.to('.btn', {
       x: 0.5, y: 0.4, rotation: 0.3,
       duration: 0.66,
@@ -112,9 +107,46 @@ export default function Home() {
       stagger: 0.15,
     })
 
+    // gyro parallax — mobile only
+    // quickTo creates a pre-configured tween setter, much cheaper than gsap.to on every event
+    const farX  = gsap.quickTo('.layer-far',  'x', { duration: 0.8, ease: 'power2.out' })
+    const farY  = gsap.quickTo('.layer-far',  'y', { duration: 0.8, ease: 'power2.out' })
+    const midX  = gsap.quickTo('.layer-mid',  'x', { duration: 0.8, ease: 'power2.out' })
+    const midY  = gsap.quickTo('.layer-mid',  'y', { duration: 0.8, ease: 'power2.out' })
+    const treeX = gsap.quickTo('.layer-tree', 'x', { duration: 0.8, ease: 'power2.out' })
+    const treeY = gsap.quickTo('.layer-tree', 'y', { duration: 0.8, ease: 'power2.out' })
+    const fgX   = gsap.quickTo('.layer-fg',   'x', { duration: 0.8, ease: 'power2.out' })
+    const fgY   = gsap.quickTo('.layer-fg',   'y', { duration: 0.8, ease: 'power2.out' })
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const x = (e.gamma ?? 0) / 30         // left-right tilt, -1..1
+      const y = ((e.beta ?? 0) - 45) / 30   // fwd-back tilt normalized around reading angle
+
+      farX(x * 4);   farY(y * 3)
+      midX(x * 7);   midY(y * 5)
+      treeX(x * 11); treeY(y * 8)
+      fgX(x * 16);   fgY(y * 11)
+    }
+
+    const setupGyro = async () => {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        // iOS 13+ requires permission on user gesture
+        try {
+          const result = await (DeviceOrientationEvent as any).requestPermission()
+          if (result === 'granted') window.addEventListener('deviceorientation', handleOrientation)
+        } catch (_) { /* permission denied */ }
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation)
+      }
+    }
+
+    // trigger gyro on first touch (satisfies iOS user-gesture requirement)
+    document.addEventListener('touchstart', setupGyro, { once: true })
+
     return () => {
       ctx.revert()
       gsap.ticker.fps(60)
+      window.removeEventListener('deviceorientation', handleOrientation)
     }
   }, [])
 
@@ -148,7 +180,6 @@ export default function Home() {
 
       <div className="ui">
         <img src="/logo.png" className="logo" alt="Yuzu Punks" />
-
         <div className="buttons">
           <a href="https://shop.yuzupunks.com" target="_blank" rel="noopener noreferrer" className="btn">Shop</a>
           <a href="#" className="btn">Explore</a>
