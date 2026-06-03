@@ -173,15 +173,25 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
       gsap.to(flashRef.current, { opacity: 0, duration: 2, ease: 'steps(24)' })
     }
 
-    // gyro parallax on scene image
-    const imgX = gsap.quickTo(imageRef.current, 'x', { duration: 0.6, ease: 'power2.out' })
-    const imgY = gsap.quickTo(imageRef.current, 'y', { duration: 0.6, ease: 'power2.out' })
+    // gyro: positional (halved) + 3D rotational around image centre
+    const imgX  = gsap.quickTo(imageRef.current, 'x',       { duration: 0.6, ease: 'power2.out' })
+    const imgY  = gsap.quickTo(imageRef.current, 'y',       { duration: 0.6, ease: 'power2.out' })
+    const imgRX = gsap.quickTo(imageRef.current, 'rotateX', { duration: 0.7, ease: 'power2.out' })
+    const imgRY = gsap.quickTo(imageRef.current, 'rotateY', { duration: 0.7, ease: 'power2.out' })
+    const imgRZ = gsap.quickTo(imageRef.current, 'rotateZ', { duration: 0.7, ease: 'power2.out' })
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      const x = (e.gamma ?? 0) / 30
-      const y = ((e.beta  ?? 0) - 45) / 30
-      imgX(x * 12)
-      imgY(y * 8)
+      const x = (e.gamma ?? 0) / 30          // -1 → 1 across ±30° left/right
+      const y = ((e.beta  ?? 0) - 45) / 30   // -1 → 1 around neutral 45° hold
+
+      // positional — halved from before
+      imgX(x * 6)
+      imgY(y * 4)
+
+      // 3D rotation — image plane pivots around its own centre
+      imgRY(x *  10)   // left/right tilt → rotate around Y axis
+      imgRX(y * -8)    // fwd/back tilt  → rotate around X axis (inverted feels natural)
+      imgRZ(x *  3)    // slight Z roll from left/right for depth
     }
     gyroRef.current = handleOrientation
 

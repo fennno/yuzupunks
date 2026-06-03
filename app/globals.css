@@ -146,6 +146,8 @@ html, body {
   inset: 0;
   background: #000;
   overflow: hidden;
+  perspective: 900px;
+  perspective-origin: 50% 50%;
 }
 
 .interior-scene-img {
@@ -158,6 +160,8 @@ html, body {
   image-rendering: pixelated;
   user-select: none;
   pointer-events: none;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .nav-arrow {
