@@ -41,17 +41,101 @@ interface SceneNode {
 // ──────────────────────────────────────────────────────────────────────────────
 
 const NODES: Record<NodeId, SceneNode> = {
-  'explore-1': {
-    image:  '/interior/explore-1.png',
-    label:  'explore-1',
+
+  // ── Entry ───────────────────────────────────────────────────────────────────
+  'room-enter': {
+    image: '/interior/room-enter.png',
+    label: 'Room — Enter',
     connections: {
-      // add connections when you have more renders, e.g.:
-      // north: 'explore-2',
+      north: 'room-middle',   // ↑ deeper into room
+      east:  'upstairs-1',   // → upstairs section
+      south: 'door',          // ↓ back to door
     },
   },
+
+  'door': {
+    image: '/interior/door.png',
+    label: 'Door',
+    connections: {
+      north: 'room-enter',   // ↑ back inside
+      // ← Back button exits to grove
+    },
+  },
+
+  // ── Main room ───────────────────────────────────────────────────────────────
+  'room-middle': {
+    image: '/interior/room-middle.png',
+    label: 'Room — Middle',
+    connections: {
+      south: 'room-enter',   // ↓ back to entry
+      east:  'room-kitchen', // → kitchen
+      west:  'room-table',   // ← table area
+    },
+  },
+
+  'room-kitchen': {
+    image: '/interior/room-kitchen.png',
+    label: 'Kitchen',
+    connections: {
+      west: 'room-middle',   // ← back to middle
+    },
+  },
+
+  // ── Table area ──────────────────────────────────────────────────────────────
+  'room-table': {
+    image: '/interior/room-table.png',
+    label: 'Table',
+    connections: {
+      east:  'room-middle',  // → back to middle
+      west:  'room-table-l', // ← left chair
+      north: 'room-table-r', // ↑ right chair
+    },
+  },
+  'room-table-l': {
+    image: '/interior/room-table-l.png',
+    label: 'Table — Left Chair',
+    connections: {
+      north: 'room-table-r', // ↑ other chair
+      south: 'room-table',   // ↓ back to table
+    },
+  },
+  'room-table-r': {
+    image: '/interior/room-table-r.png',
+    label: 'Table — Right Chair',
+    connections: {
+      north: 'room-table-l', // ↑ other chair
+      south: 'room-table',   // ↓ back to table
+    },
+  },
+
+  // ── Upstairs — north chain ───────────────────────────────────────────────
+  'upstairs-1': {
+    image: '/interior/upstairs-1.png',
+    label: 'Upstairs 1',
+    connections: {
+      south: 'room-enter',   // ↓ back down to entry
+      north: 'upstairs-2',   // ↑ further up
+    },
+  },
+  'upstairs-2': {
+    image: '/interior/upstairs-2.png',
+    label: 'Upstairs 2',
+    connections: {
+      south: 'upstairs-1',   // ↓ back
+      north: 'upstairs-3',   // ↑ further
+    },
+  },
+  'upstairs-3': {
+    image: '/interior/upstairs-3.png',
+    label: 'Upstairs 3',
+    connections: {
+      south: 'upstairs-2',   // ↓ back
+    },
+  },
+
 }
 
-const START_NODE: NodeId = 'explore-1'
+const START_NODE: NodeId = 'room-enter'
 
 // ─── Arrow directions ──────────────────────────────────────────────────────────
 const ARROWS: { dir: keyof SceneNode['connections']; label: string; style: React.CSSProperties }[] = [
