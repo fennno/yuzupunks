@@ -138,11 +138,12 @@ const NODES: Record<NodeId, SceneNode> = {
 const START_NODE: NodeId = 'room-enter'
 
 // ─── Arrow directions ──────────────────────────────────────────────────────────
-const ARROWS: { dir: keyof SceneNode['connections']; label: string; style: React.CSSProperties }[] = [
-  { dir: 'north', label: '↑', style: { top: '38%',  left: '50%', transform: 'translateX(-50%)' } },
-  { dir: 'south', label: '↓', style: { bottom: '20%', left: '50%', transform: 'translateX(-50%)' } },
-  { dir: 'east',  label: '→', style: { top: '50%',  right: '8%',  transform: 'translateY(-50%)' } },
-  { dir: 'west',  label: '←', style: { top: '50%',  left: '8%',   transform: 'translateY(-50%)' } },
+// Arrow PNG faces left (west=0°). Rotations: east=180°, north=-90°, south=90°
+const ARROWS: { dir: keyof SceneNode['connections']; rotate: number; style: React.CSSProperties }[] = [
+  { dir: 'north', rotate:  90, style: { top: '38%',    left: '50%',  transform: 'translateX(-50%) rotate(90deg)'  } },
+  { dir: 'south', rotate: -90, style: { bottom: '20%', left: '50%',  transform: 'translateX(-50%) rotate(-90deg)' } },
+  { dir: 'east',  rotate: 180, style: { top: '50%',    right: '8%',  transform: 'translateY(-50%) rotate(180deg)' } },
+  { dir: 'west',  rotate:   0, style: { top: '50%',    left: '8%',   transform: 'translateY(-50%) rotate(0deg)'   } },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -156,10 +157,11 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
   const sceneRef  = useRef<HTMLDivElement>(null)
   const imageRef  = useRef<HTMLImageElement>(null)
   const flashRef  = useRef<HTMLDivElement>(null)
+  const gyroRef   = useRef<((e: DeviceOrientationEvent) => void) | null>(null)
 
   const node = NODES[nodeId]
 
-  // fade in on mount + flash fade-out
+  // fade in on mount + flash fade-out + gyro
   useEffect(() => {
     if (!sceneRef.current) return
     gsap.fromTo(sceneRef.current,
@@ -169,6 +171,32 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
     // white flash fades out over first 2s (24 frames @ 12fps)
     if (flashRef.current) {
       gsap.to(flashRef.current, { opacity: 0, duration: 2, ease: 'steps(24)' })
+    }
+
+    // gyro parallax on scene image
+    const imgX = gsap.quickTo(imageRef.current, 'x', { duration: 0.6, ease: 'power2.out' })
+    const imgY = gsap.quickTo(imageRef.current, 'y', { duration: 0.6, ease: 'power2.out' })
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const x = (e.gamma ?? 0) / 30
+      const y = ((e.beta  ?? 0) - 45) / 30
+      imgX(x * 12)
+      imgY(y * 8)
+    }
+    gyroRef.current = handleOrientation
+
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      ;(DeviceOrientationEvent as any).requestPermission()
+        .then((res: string) => {
+          if (res === 'granted') window.addEventListener('deviceorientation', handleOrientation)
+        })
+        .catch(() => {})
+    } else {
+      window.addEventListener('deviceorientation', handleOrientation)
+    }
+
+    return () => {
+      if (gyroRef.current) window.removeEventListener('deviceorientation', gyroRef.current)
     }
   }, [])
 
@@ -202,16 +230,17 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
       {/* white flash overlay — fades out from white on enter */}
       <div ref={flashRef} className="flash-overlay" />
 
-      {/* scene image */}
+      {/* scene image — scaled up slightly so gyro shift never reveals edges */}
       <img
         ref={imageRef}
         src={node.image}
         className="interior-scene-img"
+        style={{ scale: '1.08' }}
         alt={node.label ?? nodeId}
       />
 
       {/* navigation arrows */}
-      {ARROWS.map(({ dir, label, style }) => {
+      {ARROWS.map(({ dir, style }) => {
         const target = node.connections[dir]
         if (!target) return null
         return (
@@ -222,7 +251,7 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
             onClick={() => navigate(target)}
             aria-label={`Go ${dir}`}
           >
-            {label}
+            <img src="/interior/arrow.png" className="nav-arrow-img" alt="" />
           </button>
         )
       })}
