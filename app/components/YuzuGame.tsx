@@ -6,7 +6,7 @@ import { gsap } from 'gsap'
 // ─── Asset guide ───────────────────────────────────────────────────────────────
 // Drop pixel-art PNGs into /public/game/
 //
-//   sky.png             360×200  — scrolling background (or static)
+//   sky.png             360×200  — background (static or slow-scroll)
 //   ground.png           32×16   — tileable ground strip
 //   player-run-1.png     24×32 ─┐
 //   player-run-2.png     24×32  ├─ 4-frame run cycle
@@ -17,7 +17,7 @@ import { gsap } from 'gsap'
 //   obstacle-rock.png    26×18  — rock
 //   fruit-yuzu.png       16×16  — collectible yuzu
 //
-// Until real PNGs exist, coloured placeholders render automatically.
+// Coloured placeholder blocks render automatically until real PNGs exist.
 // ──────────────────────────────────────────────────────────────────────────────
 
 const A = {
@@ -30,18 +30,19 @@ const A = {
   fruit:  '/game/fruit-yuzu.png',
 }
 
-// ─── Dimensions & physics ─────────────────────────────────────────────────────
+// ─── Dimensions & physics (tuned for 30fps) ───────────────────────────────────
 const W          = 360
 const H          = 200
 const GROUND_Y   = 152   // y of ground surface
 const PLAYER_X   = 48
 const PLAYER_W   = 24
 const PLAYER_H   = 32
-const GRAVITY    = 1.4
-const JUMP_V     = -14
-const SPEED_BASE = 3
-const SPAWN_MIN  = 55    // frames between obstacles
-const SPAWN_MAX  = 110
+const GRAVITY    = 2.2   // 2× heavier feel at 30fps
+const JUMP_V     = -20   // strong enough to clear obstacles at speed
+const SPEED_BASE = 6     // 2× original
+const SPAWN_MIN  = 40    // tighter spacing at higher speed
+const SPAWN_MAX  = 80
+const FRAME_MS   = 1000 / 30   // ~33.3 ms per tick
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Obstacle = { x: number; y: number; w: number; h: number; type: 'stump' | 'rock' }
@@ -55,12 +56,9 @@ type GState   = {
   groundX:    number
   frameCount: number
   nextSpawn:  number
-  player: {
-    y: number; vy: number; jumping: boolean
-    frame: number; frameTimer: number
-  }
-  obstacles: Obstacle[]
-  fruits:    Fruit[]
+  player: { y: number; vy: number; jumping: boolean; frame: number; frameTimer: number }
+  obstacles:  Obstacle[]
+  fruits:     Fruit[]
 }
 
 function freshState(hi = 0): GState {
@@ -68,8 +66,7 @@ function freshState(hi = 0): GState {
     running: false, dead: false,
     score: 0, hiScore: hi,
     speed: SPEED_BASE,
-    groundX: 0, frameCount: 0,
-    nextSpawn: 60,
+    groundX: 0, frameCount: 0, nextSpawn: 40,
     player: { y: GROUND_Y - PLAYER_H, vy: 0, jumping: false, frame: 0, frameTimer: 0 },
     obstacles: [], fruits: [],
   }
@@ -78,15 +75,14 @@ function freshState(hi = 0): GState {
 // ─── Draw helpers ─────────────────────────────────────────────────────────────
 type Imgs = Record<string, HTMLImageElement>
 
-function img(imgs: Imgs, src: string) {
+function loaded(imgs: Imgs, src: string) {
   const i = imgs[src]
   return i?.complete && i.naturalWidth ? i : null
 }
 
 function drawBg(ctx: CanvasRenderingContext2D, imgs: Imgs) {
-  const i = img(imgs, A.sky)
+  const i = loaded(imgs, A.sky)
   if (i) { ctx.drawImage(i, 0, 0, W, H); return }
-  // placeholder sky gradient
   const g = ctx.createLinearGradient(0, 0, 0, H)
   g.addColorStop(0, '#b4dfe5')
   g.addColorStop(1, '#e8f4d4')
@@ -95,24 +91,23 @@ function drawBg(ctx: CanvasRenderingContext2D, imgs: Imgs) {
 }
 
 function drawGround(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
-  const i = img(imgs, A.ground)
+  const i = loaded(imgs, A.ground)
   if (i) {
     for (let x = s.groundX; x < W + 32; x += 32)
       ctx.drawImage(i, x, GROUND_Y, 32, H - GROUND_Y)
-  } else {
-    ctx.fillStyle = '#5c4a2a'
-    ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y)
-    ctx.fillStyle = '#7a6138'
-    ctx.fillRect(0, GROUND_Y, W, 4)
+    return
   }
+  ctx.fillStyle = '#5c4a2a'
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y)
+  ctx.fillStyle = '#7a6138'
+  ctx.fillRect(0, GROUND_Y, W, 4)
 }
 
 function drawPlayer(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
   const src = s.player.jumping ? A.jump : A.run[s.player.frame]
-  const i   = img(imgs, src)
+  const i   = loaded(imgs, src)
   const px  = PLAYER_X, py = s.player.y
   if (i) { ctx.drawImage(i, px, py, PLAYER_W, PLAYER_H); return }
-  // placeholder: yellow body + green "eye"
   ctx.fillStyle = '#FFF100'
   ctx.fillRect(px, py, PLAYER_W, PLAYER_H)
   ctx.fillStyle = '#00A651'
@@ -123,7 +118,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
 
 function drawObstacles(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
   for (const o of s.obstacles) {
-    const i = img(imgs, o.type === 'stump' ? A.stump : A.rock)
+    const i = loaded(imgs, o.type === 'stump' ? A.stump : A.rock)
     if (i) { ctx.drawImage(i, o.x, o.y, o.w, o.h); continue }
     ctx.fillStyle = o.type === 'stump' ? '#6d4c41' : '#9e9e9e'
     ctx.fillRect(o.x, o.y, o.w, o.h)
@@ -135,15 +130,14 @@ function drawObstacles(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
 function drawFruits(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
   for (const f of s.fruits) {
     if (f.collected) continue
-    const i = img(imgs, A.fruit)
+    const i = loaded(imgs, A.fruit)
     if (i) { ctx.drawImage(i, f.x, f.y, f.w, f.h); continue }
-    // placeholder: yuzu yellow circle
     ctx.fillStyle = '#FFD700'
     ctx.beginPath()
     ctx.arc(f.x + 8, f.y + 8, 7, 0, Math.PI * 2)
     ctx.fill()
     ctx.fillStyle = '#00A651'
-    ctx.fillRect(f.x + 6, f.y, 4, 5)  // stem
+    ctx.fillRect(f.x + 6, f.y, 4, 5)
   }
 }
 
@@ -167,12 +161,14 @@ function drawAll(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function YuzuGame({ onExit }: { onExit: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const s         = useRef<GState>(freshState())
-  const imgs      = useRef<Imgs>({})
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const rafRef     = useRef<number>(0)
+  const lastRef    = useRef<number>(0)
+  const s          = useRef<GState>(freshState())
+  const imgs       = useRef<Imgs>({})
+  const flashRef   = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<'idle' | 'running' | 'dead'>('idle')
   const [score, setScore] = useState(0)
-  const flashRef  = useRef<HTMLDivElement>(null)
 
   // ── Preload assets ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -183,27 +179,33 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
     })
   }, [])
 
-  // ── Flash fade-in ───────────────────────────────────────────────────────────
+  // ── Flash fade-in (GSAP fine for one-shot UI transitions) ───────────────────
   useEffect(() => {
     if (flashRef.current)
-      gsap.to(flashRef.current, { opacity: 0, duration: 0.5, ease: 'steps(12)' })
+      gsap.to(flashRef.current, { opacity: 0, duration: 0.4, ease: 'power2.out' })
   }, [])
 
-  // ── GSAP ticker game loop at 12fps ──────────────────────────────────────────
+  // ── rAF game loop capped at 30fps ───────────────────────────────────────────
   useEffect(() => {
-    gsap.ticker.fps(12)
     const canvas = canvasRef.current!
     const ctx    = canvas.getContext('2d')!
     ctx.imageSmoothingEnabled = false
 
-    const tick = () => {
+    const loop = (now: number) => {
+      rafRef.current = requestAnimationFrame(loop)
+
+      const delta = now - lastRef.current
+      if (delta < FRAME_MS) return   // skip — too soon for next 30fps tick
+      lastRef.current = now - (delta % FRAME_MS)   // carry over remainder
+
       const g = s.current
+
       if (!g.running || g.dead) {
         drawAll(ctx, g, imgs.current)
         return
       }
 
-      // physics
+      // ── Physics ──────────────────────────────────────────────────────────────
       g.player.vy += GRAVITY
       g.player.y  += g.player.vy
       if (g.player.y >= GROUND_Y - PLAYER_H) {
@@ -212,20 +214,20 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
         g.player.jumping = false
       }
 
-      // scroll
+      // ── Scroll ───────────────────────────────────────────────────────────────
       g.groundX = (g.groundX - g.speed) % 32
-      g.speed   = SPEED_BASE + g.score / 600   // gentle ramp
+      g.speed   = SPEED_BASE + g.score / 400   // ramp
 
-      // run animation
+      // ── Player run animation (advance every 3 frames = ~10fps sprite flip) ──
       if (!g.player.jumping) {
         g.player.frameTimer++
-        if (g.player.frameTimer >= 2) {
+        if (g.player.frameTimer >= 3) {
           g.player.frameTimer = 0
           g.player.frame = (g.player.frame + 1) % 4
         }
       }
 
-      // spawn
+      // ── Spawn obstacles & fruits ─────────────────────────────────────────────
       g.frameCount++
       g.nextSpawn--
       if (g.nextSpawn <= 0) {
@@ -234,30 +236,38 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
         const ow   = type === 'stump' ? 20 : 26
         g.obstacles.push({ x: W + 8, y: GROUND_Y - oh, w: ow, h: oh, type })
         if (Math.random() < 0.45)
-          g.fruits.push({ x: W + 60 + Math.random() * 40, y: GROUND_Y - 52 - Math.random() * 24, w: 16, h: 16, collected: false })
+          g.fruits.push({
+            x: W + 60 + Math.random() * 40,
+            y: GROUND_Y - 52 - Math.random() * 24,
+            w: 16, h: 16, collected: false,
+          })
         g.nextSpawn = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN)
       }
 
-      // move objects
+      // ── Move & cull ──────────────────────────────────────────────────────────
       g.obstacles = g.obstacles.filter(o => o.x + o.w > 0)
       g.fruits    = g.fruits.filter(f => f.x + f.w > 0)
       g.obstacles.forEach(o => { o.x -= g.speed })
-      g.fruits.forEach(f => { f.x -= g.speed })
+      g.fruits.forEach(f    => { f.x -= g.speed })
 
-      // collision — shrink hitbox slightly for fairness
+      // ── Collision (shrunk hitbox for fairness) ───────────────────────────────
       const px = PLAYER_X + 4, py = g.player.y + 4
       const pw = PLAYER_W - 8,  ph = PLAYER_H - 6
       for (const o of g.obstacles) {
-        if (px < o.x + o.w - 2 && px + pw > o.x + 2 && py < o.y + o.h - 2 && py + ph > o.y) {
+        if (px < o.x + o.w - 2 && px + pw > o.x + 2 &&
+            py < o.y + o.h - 2 && py + ph > o.y) {
           g.dead    = true
           g.hiScore = Math.max(g.hiScore, Math.floor(g.score))
           setPhase('dead')
           break
         }
       }
+
       if (!g.dead) {
         for (const f of g.fruits) {
-          if (!f.collected && px < f.x + f.w && px + pw > f.x && py < f.y + f.h && py + ph > f.y) {
+          if (!f.collected &&
+              px < f.x + f.w && px + pw > f.x &&
+              py < f.y + f.h && py + ph > f.y) {
             f.collected = true
             g.score    += 50
           }
@@ -269,26 +279,15 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
       drawAll(ctx, g, imgs.current)
     }
 
-    gsap.ticker.add(tick)
-    return () => {
-      gsap.ticker.remove(tick)
-      gsap.ticker.fps(60)
-    }
+    rafRef.current = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  // ── Jump / start ────────────────────────────────────────────────────────────
+  // ── Jump / start / retry ────────────────────────────────────────────────────
   const jump = useCallback(() => {
     const g = s.current
-    if (!g.running) {
-      // start
-      s.current = freshState(g.hiScore)
-      s.current.running = true
-      setPhase('running')
-      setScore(0)
-      return
-    }
-    if (g.dead) {
-      s.current = freshState(g.hiScore)
+    if (!g.running || g.dead) {
+      s.current         = freshState(g.hiScore)
       s.current.running = true
       setPhase('running')
       setScore(0)
@@ -309,10 +308,7 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
   }, [jump])
 
   const handleExit = () => {
-    if (!flashRef.current) return
-    gsap.to(flashRef.current, {
-      opacity: 1, duration: 0.4, ease: 'steps(12)', onComplete: onExit,
-    })
+    gsap.to(flashRef.current, { opacity: 1, duration: 0.3, ease: 'power2.in', onComplete: onExit })
   }
 
   return (
@@ -337,10 +333,10 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
       {phase === 'dead' && (
         <div className="game-overlay">
           <p className="game-hint">GAME OVER</p>
-          <p className="game-hint" style={{ fontSize: '0.7em', marginTop: '0.2em' }}>
+          <p className="game-hint" style={{ fontSize: '0.7em', marginTop: '0.25em' }}>
             SCORE {score}
           </p>
-          <p className="game-hint" style={{ fontSize: '0.6em', marginTop: '0.5em', opacity: 0.7 }}>
+          <p className="game-hint" style={{ fontSize: '0.6em', marginTop: '0.6em', opacity: 0.7 }}>
             TAP TO RETRY
           </p>
         </div>
