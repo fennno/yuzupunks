@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
 import InteriorScene from './components/InteriorScene'
+import YuzuGame      from './components/YuzuGame'
 
 gsap.registerPlugin(CustomEase)
 CustomEase.create('snap',    '.22,.49,0,.96')
 CustomEase.create('zoomBurst', '.87,-.09,.93,.67')
 
-type Phase = 'loading' | 'hero' | 'interior'
+type Phase = 'loading' | 'hero' | 'interior' | 'game'
 
 const LAYER_SRCS = [
   '/layers/far-bg.png',
@@ -248,8 +249,10 @@ export default function Home() {
         {muted ? <IconMute /> : <IconSpeaker />}
       </button>
 
-      {phase === 'interior' ? (
-        <InteriorScene onExit={() => setPhase('hero')} />
+      {phase === 'game' ? (
+        <YuzuGame onExit={() => setPhase('interior')} />
+      ) : phase === 'interior' ? (
+        <InteriorScene onExit={() => setPhase('hero')} onEnterGame={() => setPhase('game')} />
       ) : (
         <main ref={containerRef} className="hero">
 

@@ -207,6 +207,87 @@ html, body {
 }
 .interior-back:active { transform: scale(0.92); }
 
+/* ── TV hotspot ─────────────────────────────────────────────────── */
+
+.tv-hotspot {
+  position: absolute;
+  /* ⚠ Adjust these to match the TV screen in upstairs-3.png */
+  top:    28%;
+  left:   32%;
+  width:  36%;
+  height: 28%;
+  background: transparent;
+  border: 2px dashed rgba(255, 241, 0, 0.0);
+  cursor: pointer;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s ease;
+}
+.tv-hotspot:hover  { border-color: rgba(255, 241, 0, 0.55); }
+.tv-hotspot:active { border-color: rgba(255, 241, 0, 0.9); }
+
+.tv-hotspot-label {
+  font-family: 'greycliff-cf', monospace;
+  font-weight: 700;
+  font-size: clamp(10px, 3vw, 16px);
+  color: #FFF100;
+  -webkit-text-stroke: 0.06em #00A651;
+  paint-order: stroke fill;
+  opacity: 0;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.tv-hotspot:hover .tv-hotspot-label { opacity: 1; }
+
+/* ── Game ───────────────────────────────────────────────────────── */
+
+.game-wrap {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.game-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /* scale up to fill screen while keeping pixel art sharp */
+  width:  min(100vw, calc(100vh * 1.8));
+  height: auto;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.game-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.game-hint {
+  font-family: 'greycliff-cf', monospace;
+  font-weight: 700;
+  font-size: clamp(18px, 5vw, 28px);
+  color: #FFF100;
+  -webkit-text-stroke: 0.08em #00A651;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  margin: 0;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .interior-debug {
   position: absolute;
   bottom: 4vw;

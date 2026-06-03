@@ -148,10 +148,11 @@ const ARROWS: { dir: keyof SceneNode['connections']; rotate: number; style: Reac
 
 // ─── Component ────────────────────────────────────────────────────────────────
 interface InteriorSceneProps {
-  onExit: () => void   // called when user clicks back to grove
+  onExit:      () => void   // called when user clicks back to grove
+  onEnterGame: () => void   // called when user clicks the TV
 }
 
-export default function InteriorScene({ onExit }: InteriorSceneProps) {
+export default function InteriorScene({ onExit, onEnterGame }: InteriorSceneProps) {
   const [nodeId, setNodeId]   = useState<NodeId>(START_NODE)
   const [entering, setEntering] = useState(true)
   const sceneRef  = useRef<HTMLDivElement>(null)
@@ -265,6 +266,14 @@ export default function InteriorScene({ onExit }: InteriorSceneProps) {
           </button>
         )
       })}
+
+      {/* TV hotspot — only visible on upstairs-3 */}
+      {/* Adjust top/left/width/height in globals.css .tv-hotspot to line up with your render */}
+      {nodeId === 'upstairs-3' && (
+        <button className="tv-hotspot" onClick={onEnterGame} aria-label="Play game on TV">
+          <span className="tv-hotspot-label">▶ PLAY</span>
+        </button>
+      )}
 
       {/* back button */}
       <button className="interior-back" onClick={handleExit}>
