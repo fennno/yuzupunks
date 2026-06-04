@@ -232,8 +232,8 @@ export default function YuzuGame({ onExit }: { onExit: () => void }) {
       g.nextSpawn--
       if (g.nextSpawn <= 0) {
         const type = Math.random() < 0.55 ? 'stump' : 'rock'
-        const oh   = type === 'stump' ? 28 : 18
-        const ow   = type === 'stump' ? 20 : 26
+        const oh   = type === 'stump' ? 84 : 54
+        const ow   = type === 'stump' ? 28 : 36
         g.obstacles.push({ x: W + 8, y: GROUND_Y - oh, w: ow, h: oh, type })
         if (Math.random() < 0.45)
           g.fruits.push({
