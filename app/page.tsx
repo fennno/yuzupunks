@@ -5,7 +5,6 @@ import { gsap } from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
 import InteriorScene from './components/InteriorScene'
 import YuzuGame      from './components/YuzuGame'
-import WarpLayer     from './components/WarpLayer'
 
 gsap.registerPlugin(CustomEase)
 CustomEase.create('snap',    '.22,.49,0,.96')
@@ -259,8 +258,8 @@ export default function Home() {
 
           <div className="layers">
             <img src="/layers/far-bg.png" className="layer layer-far"  alt="" />
-            <WarpLayer src="/layers/mid-bg.png" className="layer layer-mid"  strength={0.007} />
-            <WarpLayer src="/layers/tree.png"   className="layer layer-tree" strength={0.013} />
+            <img src="/layers/mid-bg.png" className="layer layer-mid"  alt="" />
+            <img src="/layers/tree.png"   className="layer layer-tree" alt="" />
             <img src="/layers/fg.png"     className="layer layer-fg"   alt="" />
             <img src="/layers/gr.png"     className="layer layer-gr"   alt="" />
           </div>
