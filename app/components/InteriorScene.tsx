@@ -185,14 +185,14 @@ export default function InteriorScene({ onExit, onEnterGame }: InteriorSceneProp
       const x = (e.gamma ?? 0) / 30          // -1 → 1 across ±30° left/right
       const y = ((e.beta  ?? 0) - 45) / 30   // -1 → 1 around neutral 45° hold
 
-      // positional — halved from before
-      imgX(x * 6)
-      imgY(y * 4)
+      // positional
+      imgX(x * 22)
+      imgY(y * 16)
 
-      // 3D rotation — image plane pivots around its own centre
-      imgRY(x *  10)   // left/right tilt → rotate around Y axis
-      imgRX(y * -8)    // fwd/back tilt  → rotate around X axis (inverted feels natural)
-      imgRZ(x *  3)    // slight Z roll from left/right for depth
+      // 3D rotation
+      imgRY(x *  22)
+      imgRX(y * -18)
+      imgRZ(x *   6)
     }
     gyroRef.current = handleOrientation
 
