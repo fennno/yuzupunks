@@ -32,13 +32,13 @@ const A = {
 
 // ─── Dimensions & physics (tuned for 30fps) ───────────────────────────────────
 const W          = 360
-const H          = 200
-const GROUND_Y   = 152   // y of ground surface
+const H          = 640   // portrait phone
+const GROUND_Y   = 500   // y of ground surface
 const PLAYER_X   = 48
 const PLAYER_W   = 24
 const PLAYER_H   = 32
-const GRAVITY    = 2.2   // 2× heavier feel at 30fps
-const JUMP_V     = -20   // strong enough to clear obstacles at speed
+const GRAVITY    = 2.2
+const JUMP_V     = -28   // taller canvas needs more launch velocity
 const SPEED_BASE = 6     // 2× original
 const SPAWN_MIN  = 40    // tighter spacing at higher speed
 const SPAWN_MAX  = 80
@@ -99,7 +99,7 @@ function drawGround(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
   }
   ctx.fillStyle = '#5c4a2a'
   ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y)
-  ctx.fillStyle = '#7a6138'
+  ctx.fillStyle = '#7dba6f'
   ctx.fillRect(0, GROUND_Y, W, 4)
 }
 
@@ -108,11 +108,11 @@ function drawPlayer(ctx: CanvasRenderingContext2D, s: GState, imgs: Imgs) {
   const i   = loaded(imgs, src)
   const px  = PLAYER_X, py = s.player.y
   if (i) { ctx.drawImage(i, px, py, PLAYER_W, PLAYER_H); return }
-  ctx.fillStyle = '#FFF100'
+  ctx.fillStyle = '#FF6EB4'
   ctx.fillRect(px, py, PLAYER_W, PLAYER_H)
-  ctx.fillStyle = '#00A651'
+  ctx.fillStyle = '#cc3380'
   ctx.fillRect(px + 5, py + 5, 6, 6)
-  ctx.fillStyle = '#e8c200'
+  ctx.fillStyle = '#ff99cc'
   ctx.fillRect(px, py + PLAYER_H - 6, PLAYER_W, 6)
 }
 
