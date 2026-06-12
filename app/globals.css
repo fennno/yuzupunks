@@ -289,6 +289,153 @@ html, body {
   text-align: center;
 }
 
+/* ── Shop / email funnel ─────────────────────────────────────────── */
+
+/* checkerboard: 12fps at 1/4 original speed
+   - tile 56px → pattern repeats every 112px
+   - target speed: 112px / 4.667s ≈ 24px/s (1/4 of original ~96px/s)
+   - 12fps over 4.667s = 56 steps → steps(56)
+   - rotated 45° + scaled 1.4x, oversized via inset:-50% to cover corners */
+@keyframes checkerScroll {
+  from { background-position-x: 0; }
+  to   { background-position-x: 112px; }
+}
+
+.checkerboard {
+  position: fixed;
+  inset: -50%;
+  background-image:
+    linear-gradient(45deg, #8b5e3d 25%, transparent 25%),
+    linear-gradient(-45deg, #8b5e3d 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #8b5e3d 75%),
+    linear-gradient(-45deg, transparent 75%, #8b5e3d 75%);
+  background-size: 56px 56px;
+  background-color: #c39a6c;
+  transform: rotate(45deg) scale(1.4);
+  animation: checkerScroll 4.667s steps(56) infinite;
+  z-index: 0;
+}
+
+.shop-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.shop-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(22px, 5.4vw, 43px);
+  padding: 5.4vw;
+  width: 100%;
+  max-width: 432px;
+}
+
+.shop-headline {
+  font-family: 'greycliff-cf', sans-serif;
+  font-weight: 700;
+  font-size: clamp(20px, 6.3vw, 34px);
+  color: #FFF100;
+  -webkit-text-stroke: 0.09em #00A651;
+  paint-order: stroke fill;
+  text-align: center;
+  line-height: 1.2;
+  margin: 0;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+.klaviyo-section {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: 100%;
+}
+
+.subscribe-row {
+  display: flex;
+  gap: 7px;
+  width: 100%;
+}
+
+.subscribe-input {
+  flex: 1;
+  font-family: 'greycliff-cf', sans-serif;
+  font-weight: 600;
+  font-size: clamp(12.5px, 3.6vw, 16px);
+  padding: 11px 13px;
+  background: #fff;
+  color: #000;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.subscribe-input::placeholder {
+  color: #aaa;
+  font-weight: 500;
+}
+.subscribe-input:focus {
+  border-color: #000;
+}
+
+.subscribe-btn {
+  font-family: 'greycliff-cf', sans-serif;
+  font-weight: 700;
+  font-size: clamp(12px, 3.15vw, 15px);
+  padding: 11px 14px;
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s ease, color 0.1s ease;
+  touch-action: manipulation;
+}
+.subscribe-btn:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+.subscribe-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.subscribe-err {
+  font-family: 'greycliff-cf', sans-serif;
+  font-size: 12px;
+  color: #fff;
+  margin: -4px 0 0;
+  text-align: left;
+}
+
+.social-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.social-icon {
+  display: block;
+  width: 28px;
+  height: 28px;
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.15s ease;
+}
+.social-icon:hover { color: #fff; }
+.social-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Interior debug ───────────────────────────────────────────────── */
+
 .interior-debug {
   position: absolute;
   bottom: 4vw;
