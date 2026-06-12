@@ -267,7 +267,7 @@ export default function Home() {
           <div className="ui">
             <img src="/logo.png" className="logo" alt="Yuzu Punks" />
             <div className="buttons">
-              <a href="https://shop.yuzupunks.com" target="_blank" rel="noopener noreferrer" className="btn">Shop</a>
+              <a href="/shop" className="btn">Shop</a>
               <a href="#" className="btn" onClick={(e) => { e.preventDefault(); enterInterior() }}>Explore</a>
             </div>
           </div>
