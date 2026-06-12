@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Yuzu Punks",
-  description: "Yuzu Punks — blind box collectibles",
+  description: "",
 };
 
 export const viewport: Viewport = {
