@@ -297,8 +297,8 @@ html, body {
    - 12fps over 4.667s = 56 steps → steps(56)
    - rotated 45° + scaled 1.4x, oversized via inset:-50% to cover corners */
 @keyframes checkerScroll {
-  from { background-position-y: 0; }
-  to   { background-position-y: 112px; }
+  from { background-position: 0 0; }
+  to   { background-position: 112px 112px; }
 }
 
 .checkerboard {
