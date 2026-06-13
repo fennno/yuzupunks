@@ -312,7 +312,7 @@ html, body {
   background-size: 56px 56px;
   background-color: #c39a6c;
   transform: rotate(45deg) scale(1.4);
-  animation: checkerScroll 14s steps(168) infinite;
+  animation: checkerScroll 28s steps(336) infinite;
   z-index: 0;
 }
 
