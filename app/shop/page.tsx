@@ -107,6 +107,8 @@ export default function ShopPage() {
       <div className="checkerboard" />
 
       <div className="shop-content">
+        <img src="/logo.png" className="shop-logo" alt="Yuzu Punks" />
+
         <h1 ref={headlineRef} className="shop-headline">
           coming soon to a yuzupunks.com near you!
         </h1>
