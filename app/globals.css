@@ -454,3 +454,63 @@ html, body {
   pointer-events: none;
   z-index: 40;
 }
+
+/* ── Unlock gate (public landing) ─────────────────────────────────── */
+
+.unlock-gate {
+  position: fixed;
+  bottom: 14px;
+  left: 14px;
+  z-index: 80;
+}
+
+.unlock-icon {
+  background: none;
+  border: none;
+  padding: 6px;
+  margin: 0;
+  line-height: 0;
+  cursor: pointer;
+  color: #fff;
+  opacity: 0.1;                 /* 10% — barely there */
+  transition: opacity 0.2s ease;
+  touch-action: manipulation;
+}
+.unlock-icon:hover  { opacity: 0.55; }
+.unlock-icon:active { opacity: 0.8; }
+
+.unlock-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  padding: 6px 6px 6px 10px;
+}
+
+.unlock-input {
+  width: 150px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: 'greycliff-cf', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+.unlock-input::placeholder { color: rgba(255, 255, 255, 0.45); }
+.unlock-input--error::placeholder { color: #ff8a8a; }
+
+.unlock-go {
+  background: none;
+  border: none;
+  padding: 4px;
+  line-height: 0;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.15s ease;
+  touch-action: manipulation;
+}
+.unlock-go:hover:not(:disabled)  { color: #fff; }
+.unlock-go:disabled { opacity: 0.4; cursor: default; }
